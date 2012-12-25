@@ -4,18 +4,18 @@ from django.contrib.auth.models import User
 
 class Planning(models.Model):
 	class Meta:
-		unique_together=('day','pcalandar','ptimestamp')
+		unique_together=('day','pservice','ptimestamp')
 	day = models.DateTimeField(auto_now_add=True, auto_now=False)
-	pservice = models.ForeignKey('calandars.Calandars')
-	puser = models.ForeignKey(User)
-	ptimestamp =  models.ForeignKey('calandars.Timestamps')
+	pservice = models.ForeignKey('services.Services')
+	puser = models.ForeignKey('services.UserHospital')
+	ptimestamp =  models.ForeignKey('services.Timestamps')
 	request_change = models.BooleanField(default=1)
 
 class Planning_Availability(models.Model):
 	day = models.DateTimeField(auto_now_add=True, auto_now=False)
-	puser = models.ForeignKey(User)
+	puser = models.ForeignKey('services.UserHospital')
 
 class Plannning_Change(models.Model):
 	day = models.DateTimeField(auto_now_add=True, auto_now=False)
-	puser = models.ForeignKey(User)
+	puser = models.ForeignKey('services.UserHospital')
 	pservice = models.ForeignKey('services.Services')
