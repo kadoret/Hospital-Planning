@@ -1,21 +1,28 @@
 from django.db import models
-from django.contrib.auth.models import User
+from services.models import Users_Services
 # Create your models here.
+
+class Planning_Free(models.Model):
+	class Meta:
+		unique_together=('day','ptimestamp','puser')
+	day = models.DateField(auto_now=False, auto_now_add=False)
+	pservice = models.ForeignKey('services.Services')
+	ptimestamp =  models.ForeignKey('services.Timestamps')
+	puser = models.ForeignKey('services.UserHospital')
+
 
 class Planning(models.Model):
 	class Meta:
-		unique_together=('day','pservice','ptimestamp')
-	day = models.DateTimeField(auto_now_add=True, auto_now=False)
+		unique_together=('ptimestamp','puser','day')
+	day = models.DateField(auto_now=False, auto_now_add=False)
 	pservice = models.ForeignKey('services.Services')
 	puser = models.ForeignKey('services.UserHospital')
 	ptimestamp =  models.ForeignKey('services.Timestamps')
-	request_change = models.BooleanField(default=1)
+	request_change = models.BooleanField(default = False)
 
-class Planning_Availability(models.Model):
-	day = models.DateTimeField(auto_now_add=True, auto_now=False)
-	puser = models.ForeignKey('services.UserHospital')
-
-class Plannning_Change(models.Model):
-	day = models.DateTimeField(auto_now_add=True, auto_now=False)
-	puser = models.ForeignKey('services.UserHospital')
-	pservice = models.ForeignKey('services.Services')
+	def save(self, *args, **kwargs):
+		super(Planning, self).save(*args, **kwargs)
+		# like a proc on database
+		other_user_list = Users_Services.objects.exclude(users_id = self.puser.id).filter(services_id = self.pservice.id)
+		for user in other_user_list:
+			Planning_Free.objects.create(day = self.day, pservice_id = self.pservice.id, ptimestamp_id = self.ptimestamp.id, puser_id = user.users_id)

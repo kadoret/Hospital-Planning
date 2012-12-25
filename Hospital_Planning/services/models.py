@@ -8,14 +8,13 @@ from django.db.models import get_model
 
 class Timestamps(models.Model):
         serial =  models.CharField(max_length = 15, unique=True)
-        start =  models.CharField(max_length = 4)
-        stop =  models.CharField(max_length = 4)
+	# not needed to calculat from start to stop as we identified them => static data
+	description =  models.CharField(max_length = 25)
 
         def __unicode__(self):
                 return self.serial
 
 class Days(models.Model):
-        day = models.IntegerField()
         name = models.CharField(max_length = 15)
         timestamp =  models.ManyToManyField(Timestamps)
 
@@ -32,8 +31,13 @@ class Services(models.Model):
 		return self.name
 
 class UserHospital(User):
-	services = models.ManyToManyField(Services)
+	services = models.ManyToManyField(Services, through='Users_Services')
 	objects = UserManager()
+
+class Users_Services(models.Model):
+	users = models.ForeignKey(UserHospital)
+	services =  models.ForeignKey(Services)
+	status =  models.IntegerField()
 
 class UserHospitalAuthBackend(ModelBackend):
 	def authenticate(self, username=None, password=None):
