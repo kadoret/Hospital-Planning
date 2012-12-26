@@ -1,5 +1,6 @@
 from django import forms
 from services.models import Users_Services, UserHospital, Timestamps
+from planning.models import Planning, Planning_Free
 import datetime
 from datetime import timedelta
 
@@ -11,26 +12,32 @@ class PlanningChangeForm(forms.Form):
 	
 	class UserSwap(object):
 		def __init__(self, userhospitalmodel):
-			#TODO Find a better way : getAttribut with not callable ?
-			self.id = userhospitalmodel.id
-			self.username = userhospitalmodel.username
-			self.first_name = userhospitalmodel.first_name
-			self.last_name = userhospitalmodel.last_name
-			self.email = userhospitalmodel.email
+			for i in  vars(userhospitalmodel).keys():
+				setattr(self, i, vars(userhospitalmodel)[i])
 
-		def date(self, day):
-			#TODO parsing horrible 
-			self.date = day[0][0]
-			self.description = Timestamps.objects.get(id=day[0][1]).description
+		def __str__(self):
+			return 'user: '+ self.username+' date: '+ str(self.date) + ' time: ' + str(self.description)
 
+		def __eq__(self, obj):
+			return self.username == obj.username
+
+		def date(self, date):
+			(day, timestamp) = date
+			self.date = day
+			self.description = Timestamps.objects.get(id = timestamp).description
+			return self
 	
-	def __init__(self, *args, **kwargs):
-		current_user = kwargs.pop['user_id']
-		current_service = kwargs.pop['calandar_id']
-		current_timestamp = kwargs.pop['timestamp_id']
-		super(PlanningChangeForm, self).__init__(*args, **kwargs)
-		users_choice = getUsersForChange(current_user, current_service, current_timestamp)
-		self.fields['users'].choices = users_choice
+	def __init__(self, *args, **kwargs):	
+		if ('user_id' and 'service_id' and 'timestamp_id' and 'day') in kwargs:
+			current_user = kwargs['user_id']
+			current_service = kwargs['service_id']
+			current_timestamp = kwargs['timestamp_id']
+			current_day = kwargs['day']
+			super(PlanningChangeForm, self).__init__()
+			users_choice = self.getUsersForChange(current_user, current_service, current_day, current_timestamp)
+			self.fields['users'].choices = users_choice
+		else:
+			super(PlanningChangeForm, self).__init__(*args, **kwargs)
 
 	def requestPlanningSwap(self):
 		"""
@@ -47,20 +54,26 @@ class PlanningChangeForm(forms.Form):
 				- work in this service
 			Return in priority the users want to exchange a days 
 		"""
+		# validate planning really exist
+		try:
+			Planning.objects.get(pservice = current_service, day = current_day, ptimestamp = current_timestamp, puser = current_user)
+		except:
+			return [] 
 		# users  of the  current service
-		user_serviceList = Users_Services.objects.filter(services=current_service).exclude(users=current_user).value_list('users',  flat=True)
+		users_same_service = Users_Services.objects.filter(services=current_service).exclude(users=current_user).values_list('users',  flat=True)
 		# check user works
-		user_workList = Planning.objects.filter(pservice = current_service, day = current_day, ptimestamp = current_timestamp ).exclude(puser = current_user).values_list('puser',  flat=True)
+		users_working = Planning.objects.filter(pservice = current_service, day = current_day, ptimestamp = current_timestamp ).exclude(puser = current_user).values_list('puser',  flat=True)
 		# get all potentiel user who can swap their gard
-		elegible_user = set(user_serviceList).difference(set(user_workList))
+		elegible_users =  [int(item) for item in set(users_same_service).difference(set(users_working))]
 		# now get the date can change
 		# FIXME parameter for te range date ?
-		dayList = Planning_Free.objects.filter(puser = current_user, day__range=[datetime.date.today(), datetime.date.today() + timedelta( days = 360 )]).values_list('day', 'ptimestamp',  flat=True)
-		for anElegibleUser in elegible_user:
-			ElegibleUser_date[anElegibleUser] =  Planning.objects.filter(pservice = current_service, puser = anElegibleUser ).values_list('day', 'ptimestamp', flat=True)
-		# sort for each avalaible user the dates to changa
-		finalist = [] 
-		for key,value in ElegibleUser_date:
-			for aday in set(dayList).intersection(set(value)):
-				finalist.append(UserSwap(UserHospital.objects.get(id=key).date(aday)))
-		return finalist
+		current_user_date_swap =  [(item1,int(item2)) for item1,item2 in Planning_Free.objects.filter(puser = current_user, day__range=[datetime.date.today(), datetime.date.today() + timedelta( days = 360 )]).values_list('day', 'ptimestamp')]
+		elegible_users_date_swap = {}
+		for anElegibleUser in elegible_users:
+			elegible_users_date_swap[str(anElegibleUser)] =  [(item1,int(item2)) for item1,item2 in Planning.objects.filter(pservice = current_service, puser = anElegibleUser ).values_list('day', 'ptimestamp')]
+		# final compute
+		final = []
+		for user_id in elegible_users_date_swap.keys():
+			for adate in set(current_user_date_swap).intersection(set(elegible_users_date_swap[user_id])):
+				final.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = long(user_id) )).date(adate))
+		return final

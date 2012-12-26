@@ -14,9 +14,9 @@ from datetime import timedelta
 class SimpleTest(TestCase):
 
 	def setUp(self):
-		aDummyTimestamp1 = Timestamps.objects.create(serial="S1", description="Toute la journee")
-		aDummyTimestamp2 = Timestamps.objects.create(serial="S2", description="1/2 journee")
-		aDummyTimestamp3 = Timestamps.objects.create(serial="S3", description="Le matin")
+		aDummyTimestamp1 = Timestamps.objects.create(serial="S1", description="00h00 - 08h00")
+		aDummyTimestamp2 = Timestamps.objects.create(serial="S2", description="08h00 - 16h00")
+		aDummyTimestamp3 = Timestamps.objects.create(serial="S3", description="16h00 - 24h00")
 		
 		aDays1 = Days.objects.create(name = "Monday")
 		aDays2 = Days.objects.create(name = "Tuesday")
@@ -47,7 +47,10 @@ class SimpleTest(TestCase):
 		Users_Services.objects.create(users=dummy4,services=aDummyService, status = 0)
 
 	def fill_planning_test1(self):
+		"""
+		"""
 		Planning.objects.create(day = datetime.date.today(), puser_id = 1, pservice_id = 1, ptimestamp_id = 1)
+		Planning.objects.create(day = datetime.date.today(), puser_id = 2, pservice_id = 2, ptimestamp_id = 1)
 		Planning.objects.create(day = datetime.date.today(), puser_id = 1, pservice_id= 1, ptimestamp_id = 2)
 		Planning.objects.create(day = datetime.date.today(), puser_id = 3, pservice_id= 1, ptimestamp_id = 3)
 		Planning.objects.create(day = datetime.date.today() + timedelta( days = 1) , puser_id = 2, pservice_id = 1, ptimestamp_id = 1)
@@ -60,21 +63,78 @@ class SimpleTest(TestCase):
 		Planning.objects.create(day = datetime.date.today() + timedelta( days = 3) , puser_id= 1, pservice_id = 1, ptimestamp_id = 2)
 		Planning.objects.create(day = datetime.date.today() + timedelta( days = 3) , puser_id= 4, pservice_id = 1, ptimestamp_id = 3)
 
- 	
+	def fill_planning_simple_test1(self):
+		Planning.objects.create(day = datetime.date.today(), puser_id = 1, pservice_id = 1, ptimestamp_id = 1)
+		Planning.objects.create(day = datetime.date.today(), puser_id = 2, pservice_id = 2, ptimestamp_id = 1)
+		Planning.objects.create(day = datetime.date.today(), puser_id = 4, pservice_id= 1, ptimestamp_id = 2)
+		Planning.objects.create(day = datetime.date.today(), puser_id = 3, pservice_id= 1, ptimestamp_id = 3)
 
 	def test_basic_UserSwap(self):
 		"""
-		Test the behavior of UserHospitalSwap object
+		Test the behavior of UserSwap object
 		"""
 		aDummyGetUser = UserHospital.objects.get(username="kdo1")
 		aDummySwap = PlanningChangeForm.UserSwap(aDummyGetUser)
-		aDummySwap.date([(datetime.date.today(),2)])
+		aDummySwap.date((datetime.date.today(),2))
         	self.assertEqual(aDummySwap.username,"kdo1")
 		self.assertEqual(aDummySwap.email, "kdo.nguyen@gmail.com")
-		self.assertEqual(aDummySwap.description, "1/2 journee")
+		self.assertEqual(aDummySwap.description, "08h00 - 16h00")
 		self.assertEqual(aDummySwap.date, datetime.date.today())
 
-	def test_planning_free(self):
+	def test_basic_planning_free(self):
+		"""
+		Test the generation of free planning
+		"""
 		self.fill_planning_test1()
-		self.assertEqual( [long(2),long(3),long(4)], Planning_Free.objects.filter(pservice_id = 1, ptimestamp_id = 1, day = datetime.date.today()).values_list('puser_id', flat=True))
+		self.assertEqual( [2,3,4],  [int(item) for item in Planning_Free.objects.filter(pservice_id = 1, ptimestamp_id = 2, day = datetime.date.today()).values_list('puser_id', flat=True)])
+		self.assertEqual( [1,2,4],  [int(item) for item in Planning_Free.objects.filter(pservice_id = 1, ptimestamp_id = 3, day = datetime.date.today()).values_list('puser_id', flat=True)])
+		self.assertEqual( [1,3,4],  [int(item) for item in Planning_Free.objects.filter(pservice_id = 1, ptimestamp_id = 1, day = datetime.date.today() + timedelta( days = 1)).values_list('puser_id', flat=True)])
+		self.assertEqual( [1,2,4],  [int(item) for item in Planning_Free.objects.filter(pservice_id = 1, ptimestamp_id = 1, day = datetime.date.today() + timedelta( days = 3)).values_list('puser_id', flat=True)])
 	
+	def test_basic_PlanningChangeForm(self):
+		"""
+		Test get user for planningChangeForm
+		"""
+		self.fill_planning_simple_test1()
+		test = PlanningChangeForm(user_id=1, service_id='1', timestamp_id='1',day=datetime.date.today() )
+		result = []
+		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 3 )).date(  (datetime.date.today(), 3 )  ) )
+		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 4 )).date(  (datetime.date.today(), 2 )  ) )
+		self.assertEqual(2, len(test.fields['users'].choices))
+		self.assertEqual(result, test.fields['users'].choices)
+
+	def test_basic_PlanningChangeForm_not_good_service(self):
+		"""
+		Test get user for planningChangeForm no entry
+		"""
+		self.fill_planning_simple_test1()
+		test = PlanningChangeForm(user_id=2, service_id='2', timestamp_id='1',day=datetime.date.today() )
+		self.assertEqual(0, len(test.fields['users'].choices))
+
+	def test_basic_PlanningChangeForm_fake_planning(self):
+		"""
+		Test get user for planningChangeForm fake user
+		"""
+		self.fill_planning_simple_test1()
+		test = PlanningChangeForm(user_id=5, service_id='2', timestamp_id='1',day=datetime.date.today() )
+		self.assertEqual(0, len(test.fields['users'].choices))
+
+	def test_basic_PlanningChangeForm_4_days(self):
+		"""
+		Test get user for planningChangeForm on 4 days
+		"""
+		self.fill_planning_test1()
+		test = PlanningChangeForm(user_id=3, service_id='1', timestamp_id='1',day=datetime.date.today() + timedelta( days = 2) )
+		result = []
+		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 1 )).date(  (datetime.date.today(), 2 )  ) )
+		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 1 )).date(  (datetime.date.today(), 1 )  ) )
+		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 1 )).date(  (datetime.date.today() + timedelta( days = 3), 2 )  ) )
+		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 1 )).date(  (datetime.date.today() + timedelta( days = 2), 2 )  ) )
+		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 2 )).date(  (datetime.date.today() + timedelta( days = 1), 3 )  ) )
+		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 2 )).date(  (datetime.date.today() + timedelta( days = 2), 3 )  ) )
+		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 2 )).date(  (datetime.date.today() + timedelta( days = 1), 1 )  ) )
+		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 4 )).date(  (datetime.date.today() + timedelta( days = 1), 2 )  ) )
+		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 4 )).date(  (datetime.date.today() + timedelta( days = 3), 3 )  ) )
+		self.assertEqual(9, len(test.fields['users'].choices))
+		self.assertEqual(result, test.fields['users'].choices)
+
