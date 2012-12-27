@@ -6,6 +6,8 @@ Replace this with more appropriate tests for your application.
 """
 
 from django.test import TestCase
+from django.test.client import Client
+
 from planning.forms import PlanningSwapForm
 from planning.functions import UserSwap
 from planning.models import Planning, Planning_Free
@@ -13,44 +15,59 @@ from services.models import UserHospital, Days, Services, Timestamps, Users_Serv
 import datetime
 from datetime import timedelta
 
-class SimpleTest(TestCase):
+def init_db_test():
+	aDummyTimestamp1 = Timestamps.objects.create(serial="S1", description="00h00 - 08h00")
+	aDummyTimestamp2 = Timestamps.objects.create(serial="S2", description="08h00 - 16h00")
+	aDummyTimestamp3 = Timestamps.objects.create(serial="S3", description="16h00 - 24h00")
+
+	aDays1 = Days.objects.create(name = "Monday")
+	aDays2 = Days.objects.create(name = "Tuesday")
+	aDays3 = Days.objects.create(name = "Wenesday")
+	aDays4 = Days.objects.create(name = "Thursday")
+	aDays5 = Days.objects.create(name = "Friday")
+
+	aDays1.timestamp.add(aDummyTimestamp1,aDummyTimestamp2,aDummyTimestamp3)
+	aDays2.timestamp.add(aDummyTimestamp1,aDummyTimestamp2,aDummyTimestamp3)
+	aDays3.timestamp.add(aDummyTimestamp1,aDummyTimestamp2,aDummyTimestamp3)
+	aDays4.timestamp.add(aDummyTimestamp1,aDummyTimestamp2,aDummyTimestamp3)
+	aDays5.timestamp.add(aDummyTimestamp1,aDummyTimestamp2,aDummyTimestamp3)
+
+	aDummyService = Services.objects.create(name="ch_test1", serial="ch1")
+	aDummyService2 = Services.objects.create(name="ch_test2", serial="ch2")
+	aDummyService3 = Services.objects.create(name="ch_test3", serial="ch3")
+	aDummyService2.linked_to.add(aDummyService)
+	aDummyService.day.add(aDays1,aDays2,aDays3,aDays4,aDays5)
+	aDummyService2.day.add(aDays1,aDays2,aDays3,aDays4,aDays5)
+	aDummyService3.day.add(aDays1,aDays2,aDays3,aDays4,aDays5)
+
+	dummy1 = UserHospital.objects.create_user(username="kdo1", email="kdo.nguyen@gmail.com", password="toto")
+	dummy2 = UserHospital.objects.create_user(username="kdo2", email="kdo.nguyen@gmail.com", password="toto")
+	dummy3 = UserHospital.objects.create_user(username="kdo3", email="kdo.nguyen@gmail.com", password="toto")
+	dummy4 = UserHospital.objects.create_user(username="kdo4", email="kdo.nguyen@gmail.com", password="toto")
+
+	Users_Services.objects.create(users=dummy1,services=aDummyService, status = 1)
+	Users_Services.objects.create(users=dummy2,services=aDummyService, status = 1)
+	Users_Services.objects.create(users=dummy2,services=aDummyService2, status = 1)
+	Users_Services.objects.create(users=dummy3,services=aDummyService, status = 1)
+	Users_Services.objects.create(users=dummy4,services=aDummyService, status = 0)
+
+class PlanningViewTest(TestCase):
 
 	def setUp(self):
+		init_db_test()
+		self.client = Client()	
 
-		aDummyTimestamp1 = Timestamps.objects.create(serial="S1", description="00h00 - 08h00")
-		aDummyTimestamp2 = Timestamps.objects.create(serial="S2", description="08h00 - 16h00")
-		aDummyTimestamp3 = Timestamps.objects.create(serial="S3", description="16h00 - 24h00")
-		
-		aDays1 = Days.objects.create(name = "Monday")
-		aDays2 = Days.objects.create(name = "Tuesday")
-		aDays3 = Days.objects.create(name = "Wenesday")
-		aDays4 = Days.objects.create(name = "Thursday")
-		aDays5 = Days.objects.create(name = "Friday")
-		
-		aDays1.timestamp.add(aDummyTimestamp1,aDummyTimestamp2,aDummyTimestamp3)
-		aDays2.timestamp.add(aDummyTimestamp1,aDummyTimestamp2,aDummyTimestamp3)
-		aDays3.timestamp.add(aDummyTimestamp1,aDummyTimestamp2,aDummyTimestamp3)
-		aDays4.timestamp.add(aDummyTimestamp1,aDummyTimestamp2,aDummyTimestamp3)
-		aDays5.timestamp.add(aDummyTimestamp1,aDummyTimestamp2,aDummyTimestamp3)
+	def test_simpleView(self):
+		Planning.objects.create(day = datetime.date.today(), puser_id = 1, pservice_id = 1, ptimestamp_id = 1)
+		Planning.objects.create(day = datetime.date.today(), puser_id = 3, pservice_id= 1, ptimestamp_id = 3)
+		self.client.login(username='kdo1', password='toto')
+		response = self.client.get('/planning/swap/1/1')
+		print response
+	
+class PlanningFormTest(TestCase):
 
-		aDummyService = Services.objects.create(name="ch_test1", serial="ch1")
-		aDummyService2 = Services.objects.create(name="ch_test2", serial="ch2")
-		aDummyService3 = Services.objects.create(name="ch_test3", serial="ch3")
-		aDummyService2.linked_to.add(aDummyService)
-		aDummyService.day.add(aDays1,aDays2,aDays3,aDays4,aDays5)
-		aDummyService2.day.add(aDays1,aDays2,aDays3,aDays4,aDays5)
-		aDummyService3.day.add(aDays1,aDays2,aDays3,aDays4,aDays5)
-		
-		dummy1 = UserHospital.objects.create(username="kdo1", email="kdo.nguyen@gmail.com", password="toto")
-		dummy2 = UserHospital.objects.create(username="kdo2", email="kdo.nguyen@gmail.com", password="toto")
-		dummy3 = UserHospital.objects.create(username="kdo3", email="kdo.nguyen@gmail.com", password="toto")
-		dummy4 = UserHospital.objects.create(username="kdo4", email="kdo.nguyen@gmail.com", password="toto")
-
-		Users_Services.objects.create(users=dummy1,services=aDummyService, status = 1)
-		Users_Services.objects.create(users=dummy2,services=aDummyService, status = 1)
-		Users_Services.objects.create(users=dummy2,services=aDummyService2, status = 1)
-		Users_Services.objects.create(users=dummy3,services=aDummyService, status = 1)
-		Users_Services.objects.create(users=dummy4,services=aDummyService, status = 0)
+	def setUp(self):
+		init_db_test()
 
 	def fill_planning_test1(self):
 		"""
@@ -234,4 +251,3 @@ class SimpleTest(TestCase):
 		
 		self.assertEqual(9, len(test.fields['users'].choices))
 		self.assertEqual(result, test.fields['users'].choices)
-

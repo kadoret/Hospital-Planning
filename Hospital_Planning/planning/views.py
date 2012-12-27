@@ -5,28 +5,33 @@ from django.contrib.auth.decorators import login_required
 from planning.models import Planning
 from planning.forms import PlanningSwapForm
 from datetime import datetime
+import datetime
 
 @login_required
-def all(request):
+def current(request):
 	aPlanningList = Planning.objects.filter(
 						puser = request.user
-							).exclude( day < datetime.date.today() )
-	render (request, 'planning/all.html', {'current_planning': aPlanningList})
+							).exclude( day = datetime.date.today() )
+	return render(request, 'planning/current.html', {'current_planning': aPlanningList})
 
 @login_required
-def old(request):
+def history(request):
 	aPlanningList = Planning.objects.filter(
 						puser = request.user
 							).exclude( day > datetime.date.today() )
-	render (request, 'planning/all.html', {'current_planning': aPlanningList})
+	return render (request, 'planning/history.html', {'current_planning': aPlanningList})
 
 @login_required
-def swap_planning(request, service, timestamp):
+def swap(request, service, timestamp):
 	if request.method == 'POST':
 		form = PlanningSwapForm(request.POST)
 		if form.is_valid():
 			form.save()
-			return HttpResponseRedirect('/index/')
+			return HttpResponseRedirect('/planning/my_planning')
 	else:
-		form = PlanningSwapForm(request.user, service, timestamp)
-		return render(request, 'planning/change.html', {'form': form})
+		
+		form = PlanningSwapForm(**{'user_id': request.user,	
+						'service_id': service, 
+						'timestamp_id': timestama})
+
+		return render(request, 'planning/swap.html', {'form': form})

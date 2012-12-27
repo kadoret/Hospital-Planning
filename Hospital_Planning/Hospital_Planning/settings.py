@@ -103,7 +103,7 @@ ROOT_URLCONF = 'Hospital_Planning.urls'
 WSGI_APPLICATION = 'Hospital_Planning.wsgi.application'
 
 TEMPLATE_DIRS = (
-	"/home/knguyen/dev/Hospital_Planning/templates",
+	"/home/knguyen/dev/Hospital-Planning/Hospital_Planning/templates/",
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -119,9 +119,9 @@ INSTALLED_APPS = (
 	'planning',
 	'services',	
     # Uncomment the next line to enable the admin:
-    # 'django.contrib.admin',
+    'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
-    # 'django.contrib.admindocs',
+    'django.contrib.admindocs',
 )
 CUSTOM_USER_MODEL = 'services.UserHospital'
 AUTHENTICATION_BACKENDS = (

@@ -28,7 +28,7 @@ class PlanningSwapForm(forms.Form):
 							           current_timestamp)
 			self.fields['users'].choices = users_choice
 		else:
-			super(PlanningChangeForm, self).__init__(*args, **kwargs)
+			super(PlanningSwapForm, self).__init__(*args, **kwargs)
 
 	def save(self, *args, **kwargs):
 		""" override save method """
