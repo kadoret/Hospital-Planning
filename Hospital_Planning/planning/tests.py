@@ -70,10 +70,31 @@ class SimpleTest(TestCase):
 		Planning.objects.create(day = datetime.date.today() + timedelta( days = 3) , puser_id= 4, pservice_id = 1, ptimestamp_id = 3)
 
 	def fill_planning_simple_test1(self):
+		"""
+			kdo1 can swap
+		"""	
 		Planning.objects.create(day = datetime.date.today(), puser_id = 1, pservice_id = 1, ptimestamp_id = 1)
 		Planning.objects.create(day = datetime.date.today(), puser_id = 2, pservice_id = 2, ptimestamp_id = 1)
 		Planning.objects.create(day = datetime.date.today(), puser_id = 4, pservice_id= 1, ptimestamp_id = 2)
 		Planning.objects.create(day = datetime.date.today(), puser_id = 3, pservice_id= 1, ptimestamp_id = 3)
+
+	def fill_planning_simple_test2(self):
+		"""
+			kdo1 can not swap, multi services case
+		"""
+		Planning.objects.create(day = datetime.date.today(), puser_id = 1, pservice_id = 1, ptimestamp_id = 1)
+		Planning.objects.create(day = datetime.date.today(), puser_id = 2, pservice_id = 2, ptimestamp_id = 1)
+		Planning.objects.create(day = datetime.date.today(), puser_id = 3, pservice_id = 3, ptimestamp_id = 1)
+		Planning.objects.create(day = datetime.date.today(), puser_id = 4, pservice_id = 3, ptimestamp_id = 3)
+
+	def fill_planning_simple_test3(self):
+		"""
+			kdo2 can swap ! multi services case
+		"""
+		Planning.objects.create(day = datetime.date.today(), puser_id = 1, pservice_id = 2, ptimestamp_id = 2)
+		Planning.objects.create(day = datetime.date.today(), puser_id = 2, pservice_id = 1, ptimestamp_id = 1)
+		Planning.objects.create(day = datetime.date.today(), puser_id = 3, pservice_id = 2, ptimestamp_id = 3)
+		Planning.objects.create(day = datetime.date.today(), puser_id = 4, pservice_id = 3, ptimestamp_id = 2)
 
 	def test_basic_UserSwap(self):
 		"""
@@ -128,13 +149,27 @@ class SimpleTest(TestCase):
 		self.assertEqual(2, len(test.fields['users'].choices))
 		self.assertEqual(result, test.fields['users'].choices)
 
-	def test_basic_PlanningSwapForm_not_good_service(self):
+	def test_basic_PlanningSwapForm_not_good_service1(self):
 		"""
 		Test get user for planningSwapForm no entry
 		"""
 		self.fill_planning_simple_test1()
 		test = PlanningSwapForm(user_id=2, service_id='2', timestamp_id='1',day=datetime.date.today() )
 		self.assertEqual(0, len(test.fields['users'].choices))
+
+	def test_basic_PlanningSwapForm_not_multiservices(self):
+		"""
+		"""
+		self.fill_planning_simple_test2()
+		test = PlanningSwapForm(user_id=1, service_id='1', timestamp_id='1',day=datetime.date.today() )
+		self.assertEqual(0, len(test.fields['users'].choices))
+
+	def test_basic_PlanningSwapForm_multiservices(self):
+		"""
+		"""
+		self.fill_planning_simple_test3()
+		test = PlanningSwapForm(user_id=2, service_id='1', timestamp_id='1',day=datetime.date.today() )
+		self.assertEqual(2, len(test.fields['users'].choices))
 
 	def test_basic_PlanningChangeForm_fake_planning(self):
 		"""
@@ -199,6 +234,4 @@ class SimpleTest(TestCase):
 		
 		self.assertEqual(9, len(test.fields['users'].choices))
 		self.assertEqual(result, test.fields['users'].choices)
-#		for i in test.fields['users'].choices:
-#			print i
 

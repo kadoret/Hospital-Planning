@@ -5,18 +5,17 @@ from services.model import Calandars
 from servicess.forms import CalandarsForm
 
 @login_required
-def index(request):
+def service(request):
 	aListServices = services.objects()
-	return render( request,  'services/index.html', {'servicesList': aListServices})
+	return render( request,  'services/service.html', {'servicesList': aListServices})
 
 @login_required
-def add(request):
+def service_add(request):
 	if request.method == 'POST':
 		form = ServicesForm(request.POST) 
 		if form.is_valid():
-			# TODO do something :)
 			form.save() 
 			return HttpResponseRedirect('/index/')
 	else:
-		form =  CalandarsForm()
+		form =  ServicesForm()
 		return render(request, 'services/add.html', {'form': form})

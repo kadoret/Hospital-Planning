@@ -3,6 +3,26 @@ from planning.models import Planning, Planning_Free
 import datetime
 from datetime import timedelta
 
+
+class PlanningPopulate(object):
+
+	def __init__(self, type_gen, services, day_range):
+		self.type_gen = type_gen
+		self.services = services
+		self.day_range = day_range
+
+	def _basic_generator(self):
+		pass		
+
+	def _constrainte_generator(self):
+		pass
+
+	def process(self):
+		if self.type == 'simple':
+			return self._basic_generator() 
+		elif self.type == 'constainte':
+			return self._constrainte_generator()
+
 class UserSwap(object):
 
  	def __init__(self, userhospitalmodel):

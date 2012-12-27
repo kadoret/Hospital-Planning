@@ -1,6 +1,10 @@
 from django.db import models
-from services.models import Users_Services
+from services.models import Users_Services, Services
 # Create your models here.
+
+class Import_Configuration(models.Model):
+	name = models.CharField(max_length = 40, unique=True)
+	services = models.ManyToManyField(Services)
 
 class Planning_Free(models.Model):
 	class Meta:
