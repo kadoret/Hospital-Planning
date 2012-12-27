@@ -8,7 +8,7 @@ from django.db.models import get_model
 
 class Timestamps(models.Model):
         serial =  models.CharField(max_length = 15, unique=True)
-	# not needed to calculat from start to stop as we identified them => static data
+	# not needed to calculate from start to stop as we identified them => static data
 	description =  models.CharField(max_length = 25)
 
         def __unicode__(self):
@@ -26,7 +26,8 @@ class Services(models.Model):
 	name =  models.CharField(max_length = 15)
 	serial =  models.CharField(max_length = 15, unique=True)
 	day = models.ManyToManyField(Days)
-
+	linked_to = models.ManyToManyField('self')
+	
 	def __unicode__(self):
 		return self.name
 
