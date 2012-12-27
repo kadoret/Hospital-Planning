@@ -6,11 +6,13 @@ Replace this with more appropriate tests for your application.
 """
 
 from django.test import TestCase
-from planning.forms import PlanningChangeForm
+from planning.forms import PlanningSwapForm
+from planning.functions import UserSwap
 from planning.models import Planning, Planning_Free
 from services.models import UserHospital, Days, Services, Timestamps, Users_Services
 import datetime
 from datetime import timedelta
+
 class SimpleTest(TestCase):
 
 	def setUp(self):
@@ -78,8 +80,8 @@ class SimpleTest(TestCase):
 		Test the behavior of UserSwap object
 		"""
 		aDummyGetUser = UserHospital.objects.get(username="kdo1")
-		aDummySwap = PlanningChangeForm.UserSwap(aDummyGetUser)
-		aDummySwap.date((datetime.date.today(),2))
+		aDummySwap = UserSwap(aDummyGetUser)
+		aDummySwap.setSwapInfo((datetime.date.today(),2))
         	self.assertEqual(aDummySwap.username,"kdo1")
 		self.assertEqual(aDummySwap.email, "kdo.nguyen@gmail.com")
 		self.assertEqual(aDummySwap.description, "08h00 - 16h00")
@@ -90,55 +92,111 @@ class SimpleTest(TestCase):
 		Test the generation of free planning
 		"""
 		self.fill_planning_test1()
-		self.assertEqual( [2,3,4],  [int(item) for item in Planning_Free.objects.filter(pservice_id = 1, ptimestamp_id = 2, day = datetime.date.today()).values_list('puser_id', flat=True)])
-		self.assertEqual( [1,2,4],  [int(item) for item in Planning_Free.objects.filter(pservice_id = 1, ptimestamp_id = 3, day = datetime.date.today()).values_list('puser_id', flat=True)])
-		self.assertEqual( [1,3,4],  [int(item) for item in Planning_Free.objects.filter(pservice_id = 1, ptimestamp_id = 1, day = datetime.date.today() + timedelta( days = 1)).values_list('puser_id', flat=True)])
-		self.assertEqual( [1,2,4],  [int(item) for item in Planning_Free.objects.filter(pservice_id = 1, ptimestamp_id = 1, day = datetime.date.today() + timedelta( days = 3)).values_list('puser_id', flat=True)])
+		self.assertEqual( [2,3,4],  [ int(item) 
+						for item in Planning_Free.objects.filter(
+										pservice_id = 1, ptimestamp_id = 2, day = datetime.date.today()
+											).values_list('puser_id', flat=True)])
+		self.assertEqual( [1,2,4],  [ int(item) 
+						for item in Planning_Free.objects.filter(
+										pservice_id = 1, ptimestamp_id = 3, day = datetime.date.today()
+											).values_list('puser_id', flat=True)])
+		self.assertEqual( [1,3,4],  [ int(item) 
+						for item in Planning_Free.objects.filter(
+										pservice_id = 1, ptimestamp_id = 1, day = datetime.date.today() + timedelta( days = 1)
+											).values_list('puser_id', flat=True)])
+		self.assertEqual( [1,2,4],  [ int(item) 
+						for item in Planning_Free.objects.filter(
+										pservice_id = 1, ptimestamp_id = 1, day = datetime.date.today() + timedelta( days = 3)
+											).values_list('puser_id', flat=True)])
 	
-	def test_basic_PlanningChangeForm(self):
+	def test_basic_PlanningSwapForm(self):
 		"""
-		Test get user for planningChangeForm
+		Test get user for planningSwapForm
 		"""
 		self.fill_planning_simple_test1()
-		test = PlanningChangeForm(user_id=1, service_id='1', timestamp_id='1',day=datetime.date.today() )
+		test = PlanningSwapForm(user_id=1, service_id='1', timestamp_id='1',day=datetime.date.today() )
 		result = []
-		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 3 )).date(  (datetime.date.today(), 3)  ) )
-		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 4 )).date(  (datetime.date.today(), 2)  ) )
+		result.append(
+			UserSwap(UserHospital.objects.get(id = 3 )
+				).setSwapInfo(  
+					( datetime.date.today(), 3)  ) )
+		result.append(
+			UserSwap(UserHospital.objects.get(id = 4 )
+				).setSwapInfo(  
+					( datetime.date.today(), 2)  ) )
+		
 		self.assertEqual(2, len(test.fields['users'].choices))
 		self.assertEqual(result, test.fields['users'].choices)
 
-	def test_basic_PlanningChangeForm_not_good_service(self):
+	def test_basic_PlanningSwapForm_not_good_service(self):
 		"""
-		Test get user for planningChangeForm no entry
+		Test get user for planningSwapForm no entry
 		"""
 		self.fill_planning_simple_test1()
-		test = PlanningChangeForm(user_id=2, service_id='2', timestamp_id='1',day=datetime.date.today() )
+		test = PlanningSwapForm(user_id=2, service_id='2', timestamp_id='1',day=datetime.date.today() )
 		self.assertEqual(0, len(test.fields['users'].choices))
 
 	def test_basic_PlanningChangeForm_fake_planning(self):
 		"""
-		Test get user for planningChangeForm fake user
+		Test get user for planningSwapForm fake user
 		"""
 		self.fill_planning_simple_test1()
-		test = PlanningChangeForm(user_id=5, service_id='2', timestamp_id='1',day=datetime.date.today() )
+		test = PlanningSwapForm(user_id=5, service_id='2', timestamp_id='1',day=datetime.date.today() )
 		self.assertEqual(0, len(test.fields['users'].choices))
 
 	def test_basic_PlanningChangeForm_4_days(self):
 		"""
-		Test get user for planningChangeForm on 4 days
+		Test get user for planningSwapForm on 4 days
 		"""
 		self.fill_planning_test1()
-		test = PlanningChangeForm(user_id=3, service_id='1', timestamp_id='1',day=datetime.date.today() + timedelta( days = 2) )
+		test = PlanningSwapForm( user_id = 3, service_id='1', timestamp_id='1',day = datetime.date.today() + timedelta( days = 2) )
 		result = []
-		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 1 )).date(  (datetime.date.today(), 2)  ) )
-		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 1 )).date(  (datetime.date.today(), 1)  ) )
-		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 1 )).date(  (datetime.date.today() + timedelta( days = 3), 2 )  ) )
-		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 1 )).date(  (datetime.date.today() + timedelta( days = 2), 2 )  ) )
-		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 2 )).date(  (datetime.date.today() + timedelta( days = 1), 3 )  ) )
-		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 2 )).date(  (datetime.date.today() + timedelta( days = 2), 3 )  ) )
-		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 2 )).date(  (datetime.date.today() + timedelta( days = 1), 1 )  ) )
-		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 4 )).date(  (datetime.date.today() + timedelta( days = 1), 2 )  ) )
-		result.append(PlanningChangeForm.UserSwap(UserHospital.objects.get(id = 4 )).date(  (datetime.date.today() + timedelta( days = 3), 3 )  ) )
+		result.append( 
+			UserSwap(
+				UserHospital.objects.get(id = 1 )
+				).setSwapInfo( 
+					( datetime.date.today(), 2)  ) )
+		result.append(
+			UserSwap(
+				UserHospital.objects.get(id = 1 )
+				).setSwapInfo(  
+					( datetime.date.today(), 1)  ) )
+		result.append(
+			UserSwap(
+				UserHospital.objects.get(id = 1 )
+				).setSwapInfo( 
+					( datetime.date.today() + timedelta( days = 3), 2 )  ) )
+		result.append(
+			UserSwap(
+				UserHospital.objects.get(id = 1 )
+				).setSwapInfo(  
+					( datetime.date.today() + timedelta( days = 2), 2 )  ) )
+		result.append(
+			UserSwap(
+				UserHospital.objects.get(id = 2 )
+				).setSwapInfo(  
+					( datetime.date.today() + timedelta( days = 1), 3 )  ) )
+		result.append(
+			UserSwap(
+				UserHospital.objects.get(id = 2 )
+				).setSwapInfo(
+					( datetime.date.today() + timedelta( days = 2), 3 )  ) )
+		result.append(
+			UserSwap(
+				UserHospital.objects.get(id = 2 )
+				).setSwapInfo(
+					( datetime.date.today() + timedelta( days = 1), 1 )  ) )
+		result.append(
+			UserSwap(
+				UserHospital.objects.get(id = 4 )
+				).setSwapInfo(
+					( datetime.date.today() + timedelta( days = 1), 2 )  ) )
+		result.append(
+			UserSwap(
+				UserHospital.objects.get(id = 4 )
+				).setSwapInfo(  
+					( datetime.date.today() + timedelta( days = 3), 3 )  ) )
+		
 		self.assertEqual(9, len(test.fields['users'].choices))
 		self.assertEqual(result, test.fields['users'].choices)
 #		for i in test.fields['users'].choices:
