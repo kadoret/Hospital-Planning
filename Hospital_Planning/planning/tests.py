@@ -11,6 +11,7 @@ from django.test.client import Client
 from planning.forms import PlanningSwapForm
 from planning.extra.methods import UserSwap, getUserSwapForPlanningSwap
 from planning.models import Planning, Planning_Free
+from mail.models import mail_adress, mail
 from services.models import UserHospital, Days, Services, Timestamps, Users_Services
 import datetime
 from datetime import timedelta
@@ -46,6 +47,10 @@ def init_db_test():
 	dummy3 = UserHospital.objects.create_user(username="kdo3", email="kdo.nguyen@gmail.com", password="toto")
 	dummy4 = UserHospital.objects.create_user(username="kdo4", email="kdo.nguyen@gmail.com", password="toto")
 
+	mail_adress.objects.create(muser = dummy1, email_intern="toto1@kdo.com" )
+	mail_adress.objects.create(muser = dummy2, email_intern="toto2@kdo.com" )
+	mail_adress.objects.create(muser = dummy3, email_intern="toto3@kdo.com" )
+
 	Users_Services.objects.create(users=dummy1,services=aDummyService, status = 1)
 	Users_Services.objects.create(users=dummy2,services=aDummyService, status = 1)
 	Users_Services.objects.create(users=dummy2,services=aDummyService2, status = 1)
@@ -77,6 +82,18 @@ class PlanningViewTest(TestCase):
 		self.client.login(username='kdo1', password='toto')
 		response = self.client.get('/planning/auto_swap/1/')
 		self.assertEqual(response.status_code, 200)
+
+	def test_simple_post_view_auto_swap(self):
+		"""	"""
+                Planning.objects.create(day = datetime.date.today(), puser_id = 1, pservice_id = 1, ptimestamp_id = 1)
+                Planning.objects.create(day = datetime.date.today(), puser_id = 2, pservice_id = 2, ptimestamp_id = 1)
+                Planning.objects.create(day = datetime.date.today(), puser_id = 4, pservice_id= 1, ptimestamp_id = 2)
+                Planning.objects.create(day = datetime.date.today(), puser_id = 3, pservice_id= 1, ptimestamp_id = 3)
+		self.client.login(username='kdo1', password='toto')
+		choices = [(1, 4),(1, 3)]
+		test = self.client.post('/planning/auto_swap/1/',{'title': 'Hello du con', 
+				'message':'Je vais echanger ta garde', 
+				'users': choices })
 	
 class PlanningFormTest(TestCase):
 

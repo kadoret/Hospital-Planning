@@ -8,7 +8,8 @@ class Import_Configuration(models.Model):
 
 class Planning_Free(models.Model):
 	class Meta:
-		unique_together=('day','ptimestamp','puser')
+		unique_together=('day','ptimestamp','pservice', 'puser')
+	
 	day = models.DateField(auto_now=False, auto_now_add=False)
 	pservice = models.ForeignKey('services.Services')
 	ptimestamp =  models.ForeignKey('services.Timestamps')
@@ -17,16 +18,23 @@ class Planning_Free(models.Model):
 
 class Planning(models.Model):
 	class Meta:
-		unique_together=('ptimestamp','puser','day')
+		unique_together=('ptimestamp','pservice','day')
+	
 	day = models.DateField(auto_now=False, auto_now_add=False)
 	pservice = models.ForeignKey('services.Services')
 	puser = models.ForeignKey('services.UserHospital')
 	ptimestamp =  models.ForeignKey('services.Timestamps')
-	request_change = models.BooleanField(default = False)
+	
+	change_to = models.ManyToManyField('self')
 
 	def save(self, *args, **kwargs):
 		super(Planning, self).save(*args, **kwargs)
 		# like a proc on database
-		other_user_list = Users_Services.objects.exclude(users_id = self.puser.id).filter(services_id = self.pservice.id)
+		other_user_list = Users_Services.objects.exclude(
+							users_id = self.puser.id).filter(
+								services_id = self.pservice.id)
 		for user in other_user_list:
-			Planning_Free.objects.create(day = self.day, pservice_id = self.pservice.id, ptimestamp_id = self.ptimestamp.id, puser_id = user.users_id)
+			Planning_Free.objects.create(day = self.day,
+					     pservice_id = self.pservice.id,
+					     ptimestamp_id = self.ptimestamp.id, 
+					     puser_id = user.users_id)

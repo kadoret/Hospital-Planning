@@ -1,5 +1,7 @@
 from services.models import Users_Services,Services, UserHospital, Timestamps
 from planning.models import Planning, Planning_Free
+from mail.models import mail_adress, mail
+
 import datetime
 from datetime import timedelta
 
@@ -11,17 +13,22 @@ class PlanningPopulate(object):
 		self.services = services
 		self.day_range = day_range
 
-	def _basic_generator(self):
+	def _simple_constraint_generator(self):
 		pass		
 
-	def _constrainte_generator(self):
+	def _constraint_generator(self):
+		pass
+
+	def _random_generator(self):
 		pass
 
 	def process(self):
 		if self.type == 'simple':
-			return self._basic_generator() 
+			return self._simple_constraint_generator() 
 		elif self.type == 'constainte':
-			return self._constrainte_generator()
+			return self._constraint_generator()
+		else:
+			return self._random_generator()
 
 class UserSwap(object):
 
@@ -56,14 +63,25 @@ class UserSwap(object):
 								).values_list('pservice', flat=True)
 			self.service_desc = Services.objects.get(id = service_id[0] ).name
 			self.planning_swap_init  = int(planning_id) 
-			self.planning_swap_dest  = int(Planning.objects.get( puser = self.id, pservice = service_id, ptimestamp = timestamp, day =day).id)
+			self.planning_swap_dest  = int(Planning.objects.get( puser = self.id,
+									 pservice = service_id,
+									 ptimestamp = timestamp,
+									 day =day).id)
 			return self
 		except:
 			return self
 
-def setPlanningSwap():
-	""" Update the planning after a swap """
-	pass
+def setPlanningSwap(*args, **kwargs):
+	""" Flag all the planning to be swap """  
+	if 'list_swap' in kwargs:
+		for ( swap_ori, swap_dest ) in kwargs['list_swap']:
+			Planning.objects.get(id = swap_ori).change_to.add(swap_dest)
+			user_ori = Planning;objects.get(id = swap_ori).id
+			user_des = Planning;objects.get(id = swap_dest).id
+			mail.objects.create(cuser = user_des,
+					 title = kwargs['title'],
+					 text = kwargs['text'],
+					 mfrom = mail_adress.get(muser = user_ori))
 
 def getUserSwapForPlanningSwap(current_user, planning_id):
 	""" Return list of UserSwap for a specific planning swap """

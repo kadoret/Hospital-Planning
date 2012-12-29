@@ -7,9 +7,9 @@ admin.autodiscover()
 urlpatterns = patterns('',
 
 	url(r'^planning/', include('planning.urls')),
-	#url(r'^services/', include('services.urls')),
+	#url(r'^service/', include('services.urls')),
 	#url(r'^accueil/', include('blog.urls')),
-	#url(r'^messagerie/', include('mail.urls')),
+	#url(r'^mail/', include('mail.urls')),
 
     # Examples:
     # url(r'^$', 'Hospital_Planning.views.home', name='home'),

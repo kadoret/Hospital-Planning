@@ -10,4 +10,5 @@ urlpatterns = patterns('planning.views',
 	url(r'^history/?$', 'history'),
 	url(r'^auto_swap/(\d+)/?$', 'auto_swap'),
 	url(r'^swap/(\d+)/?$', 'swap'),
+	#url(r'^generate/?$', 'generate'),
 )
