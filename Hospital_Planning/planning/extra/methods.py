@@ -26,18 +26,27 @@ class PlanningPopulate(object):
 class UserSwap(object):
 
  	def __init__(self, userhospitalmodel):
-		 for i in vars(userhospitalmodel).keys():
-		 	setattr(self, i, vars(userhospitalmodel)[i])
+		for i in vars(userhospitalmodel).keys():
+			setattr(self, i, vars(userhospitalmodel)[i])
  
 	def __str__(self):
-		return ' '.join(['user:',    self.username,
-				 'date:',    str(self.date),
-				 'time:',    str(self.description), 
-				 'service:', str(self.service)])
+		return ' '.join([self.username,
+				 '-',    str(self.date),
+				 '(',    str(self.description), 
+				 ')', str(self.service_desc)])
+
+	def __unicode__(self):
+		return ' '.join([self.username,
+				 '-',    str(self.date),
+				 '(',    str(self.description),
+				 ')', str(self.service_desc)])
 	def __eq__(self, obj):
 		return self.username == obj.username
- 
-	def setSwapInfo(self, date):
+
+	def marshall(self):
+		return  ( (self.planning_swap_init, self.planning_swap_dest), self) 	
+	
+	def setSwapInfo(self, date, planning_id):
 		try:
 			(day, timestamp) = date
 			self.date = day
@@ -45,7 +54,9 @@ class UserSwap(object):
 			service_id = Planning.objects.filter(
 							puser = self.id, day = day, ptimestamp = timestamp
 								).values_list('pservice', flat=True)
-			service_desc = Services.objects.get(id = service_id[0] ).name
+			self.service_desc = Services.objects.get(id = service_id[0] ).name
+			self.planning_swap_init  = int(planning_id) 
+			self.planning_swap_dest  = int(Planning.objects.get( puser = self.id, pservice = service_id, ptimestamp = timestamp, day =day).id)
 			return self
 		except:
 			return self
@@ -54,34 +65,34 @@ def setPlanningSwap():
 	""" Update the planning after a swap """
 	pass
 
-def getUserSwapForPlanningSwap(current_user, current_service, current_day, current_timestamp):
+def getUserSwapForPlanningSwap(current_user, planning_id):
 	""" Return list of UserSwap for a specific planning swap """
 	# validate planning really exist
 	try:
-		Planning.objects.get(   pservice = current_service, 
-				        day = current_day, 
-					ptimestamp = current_timestamp, 
-					puser = current_user)	
+		planning_swap = Planning.objects.get( id = planning_id )
+		# try to hack ...
+		if planning_swap.puser_id != current_user:
+			return []
 	except:
 		return [] 
 	# users  of the  current service
-	users_same_service = Users_Services.objects.filter( services=current_service
-								).exclude(users=current_user
+	users_same_service = Users_Services.objects.filter( services = planning_swap.pservice_id
+								).exclude(users= planning_swap.puser_id
 								).values_list('users',flat=True)
 	# check user works
-	users_working = Planning.objects.filter( pservice = current_service, 
-						 day = current_day, 
-						 ptimestamp = current_timestamp 
-							).exclude(puser = current_user
+	users_working = Planning.objects.filter( pservice = planning_swap.pservice_id, 
+						 day = planning_swap.day, 
+						 ptimestamp = planning_swap.ptimestamp_id 
+							).exclude(puser = planning_swap.puser_id
 									).values_list('puser',flat=True)
 	# get all potentiel user who can swap their gard
 	elegible_users =  [int(item) 
 				for item in set(users_same_service).difference( set(users_working) )]
 	# now  take attention to the relation between each services, if services are linked (similar) ok you can swap!
-	user_current_service = Services.objects.get(id = current_service)
+	user_current_service = Services.objects.get(id = planning_swap.pservice_id)
 	services_linked_list = [ int(item) 
 					for item in user_current_service.linked_to.values_list('id', flat=True) ]
-	services_linked_list.append(int(current_service))
+	services_linked_list.append(int(planning_swap.pservice_id))
 	# now get the dates we can swap for the user, we check that the service is elegible. Store result in a set
 	current_user_date_swap =  [ ( item1, int(item2)  ) 
 					for item1,item2,item3 in 
@@ -106,5 +117,5 @@ def getUserSwapForPlanningSwap(current_user, current_service, current_day, curre
 			final.append( 
 				UserSwap( 
 					UserHospital.objects.get(id = long(user_id))
-					).setSwapInfo(aSwapInfo) )
+					).setSwapInfo(aSwapInfo, planning_id) )
 	return final

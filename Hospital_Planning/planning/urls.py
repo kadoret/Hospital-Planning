@@ -6,7 +6,8 @@ from django.conf.urls import patterns, include, url
 
 urlpatterns = patterns('planning.views',
 
-	url(r'^all/?$', 'current'),
-	url(r'^old/?$', 'history'),
-	url(r'^swap/(\d+)/(\d+)/?$', 'swap'),
+	url(r'^current/?$', 'current'),
+	url(r'^history/?$', 'history'),
+	url(r'^auto_swap/(\d+)/?$', 'auto_swap'),
+	url(r'^swap/(\d+)/?$', 'swap'),
 )

@@ -22,16 +22,18 @@ def history(request):
 	return render (request, 'planning/history.html', {'current_planning': aPlanningList})
 
 @login_required
-def swap(request, service, timestamp):
+def auto_swap(request, planning_id):
 	if request.method == 'POST':
 		form = PlanningSwapForm(request.POST)
 		if form.is_valid():
 			form.save()
-			return HttpResponseRedirect('/planning/my_planning')
+			return HttpResponseRedirect('/planning/current')
 	else:
 		
-		form = PlanningSwapForm(**{'user_id': request.user,	
-						'service_id': service, 
-						'timestamp_id': timestama})
+		form = PlanningSwapForm(**{'user_id': request.user.id,		
+				'planning_id': planning_id})
+		return render(request, 'planning/auto_swap.html', {'form': form})
 
-		return render(request, 'planning/swap.html', {'form': form})
+@login_required
+def swap(request):
+	pass
