@@ -90,7 +90,7 @@ class PlanningViewTest(TestCase):
                 Planning.objects.create(day = datetime.date.today(), puser_id = 4, pservice_id= 1, ptimestamp_id = 2)
                 Planning.objects.create(day = datetime.date.today(), puser_id = 3, pservice_id= 1, ptimestamp_id = 3)
 		self.client.login(username='kdo1', password='toto')
-		choices = [(1, 4),(1, 3)]
+		choices = [4]
 		test = self.client.post('/planning/auto_swap/1/',{'title': 'Hello du con', 
 				'message':'Je vais echanger ta garde', 
 				'users': choices })

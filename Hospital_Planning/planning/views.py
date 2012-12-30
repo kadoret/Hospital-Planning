@@ -24,15 +24,15 @@ def history(request):
 @login_required
 def auto_swap(request, planning_id):
 	if request.method == 'POST':
-		form = PlanningSwapForm(request.POST)
+		print request.POST
+		form = PlanningSwapForm(request.POST, user_id = request.user.id,planning_id = planning_id)
 		print form
 		if form.is_valid():
 			form.save()
-		return HttpResponseRedirect('/planning/current')
+			return HttpResponseRedirect('/planning/current')
 	else:
 		
-		form = PlanningSwapForm(**{'user_id': request.user.id,		
-				'planning_id': planning_id})
+		form = PlanningSwapForm(user_id = request.user.id, planning_id =  planning_id)
 		print form
 		return render(request, 'planning/auto_swap.html', {'form': form})
 

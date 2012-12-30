@@ -1,7 +1,7 @@
 from services.models import Users_Services,Services, UserHospital, Timestamps
 from planning.models import Planning, Planning_Free
 from mail.models import mail_adress, mail
-
+from django import forms
 import datetime
 from datetime import timedelta
 
@@ -30,6 +30,16 @@ class PlanningPopulate(object):
 		else:
 			return self._random_generator()
 
+class UserSwapField(forms.MultipleChoiceField):
+	pass
+#	def to_python(self,value):
+#		print value
+	
+#	def validate(self, value):
+#		print value
+		
+
+
 class UserSwap(object):
 
  	def __init__(self, userhospitalmodel):
@@ -51,7 +61,7 @@ class UserSwap(object):
 		return self.username == obj.username
 
 	def marshall(self):
-		return  ( (self.planning_swap_init, self.planning_swap_dest), self) 	
+		return  (str(self.planning_swap_dest), str(self)) 	
 	
 	def setSwapInfo(self, date, planning_id):
 		try:
