@@ -30,16 +30,6 @@ class PlanningPopulate(object):
 		else:
 			return self._random_generator()
 
-class UserSwapField(forms.MultipleChoiceField):
-	pass
-#	def to_python(self,value):
-#		print value
-	
-#	def validate(self, value):
-#		print value
-		
-
-
 class UserSwap(object):
 
  	def __init__(self, userhospitalmodel):
@@ -61,7 +51,7 @@ class UserSwap(object):
 		return self.username == obj.username
 
 	def marshall(self):
-		return  (str(self.planning_swap_dest), str(self)) 	
+		return  (str(self.planning_swap), str(self)) 	
 	
 	def setSwapInfo(self, date, planning_id):
 		try:
@@ -72,8 +62,7 @@ class UserSwap(object):
 							puser = self.id, day = day, ptimestamp = timestamp
 								).values_list('pservice', flat=True)
 			self.service_desc = Services.objects.get(id = service_id[0] ).name
-			self.planning_swap_init  = int(planning_id) 
-			self.planning_swap_dest  = int(Planning.objects.get( puser = self.id,
+			self.planning_swap  = int(Planning.objects.get( puser = self.id,
 									 pservice = service_id,
 									 ptimestamp = timestamp,
 									 day =day).id)
@@ -81,17 +70,16 @@ class UserSwap(object):
 		except:
 			return self
 
-def setPlanningSwap(*args, **kwargs):
+def setPlanningSwap(list_swap, title, text, current_user, planning_id):
 	""" Flag all the planning to be swap """  
-	if 'list_swap' in kwargs:
-		for ( swap_ori, swap_dest ) in kwargs['list_swap']:
-			Planning.objects.get(id = swap_ori).change_to.add(swap_dest)
-			user_ori = Planning;objects.get(id = swap_ori).id
-			user_des = Planning;objects.get(id = swap_dest).id
-			mail.objects.create(cuser = user_des,
-					 title = kwargs['title'],
-					 text = kwargs['text'],
-					 mfrom = mail_adress.get(muser = user_ori))
+	for planning_id_swap  in list_swap:
+		Planning.objects.get(id = planning_id ).change_to.add(planning_id_swap)
+		user_swap = Planning.objects.get(id = planning_id_swap).id
+		mail.objects.create(cuser = UserHospital.objects.get(id = user_swap),
+				 title = title,
+				 text = text,
+				 mfrom = mail_adress.objects.get(
+						muser = UserHospital.objects.get(id = current_user )))
 
 def getUserSwapForPlanningSwap(current_user, planning_id):
 	""" Return list of UserSwap for a specific planning swap """

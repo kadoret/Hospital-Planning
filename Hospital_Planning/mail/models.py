@@ -10,5 +10,5 @@ class mail(models.Model):
 	cuser = models.ForeignKey('services.UserHospital')
 	title = models.CharField(max_length = 50 )
 	text = models.TextField()
-	open = models.IntegerField()
+	open = models.BooleanField(default=False)
 	mfrom = models.ForeignKey(mail_adress)

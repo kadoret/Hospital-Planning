@@ -1,5 +1,5 @@
 # Create your views here.
-from django.shortcuts import render
+from django.shortcuts import render, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 
 from planning.models import Planning
@@ -24,16 +24,14 @@ def history(request):
 @login_required
 def auto_swap(request, planning_id):
 	if request.method == 'POST':
-		print request.POST
 		form = PlanningSwapForm(request.POST, user_id = request.user.id,planning_id = planning_id)
 		print form
 		if form.is_valid():
-			form.save()
+			form.save(user_id = request.user.id, planning_id = planning_id)
 			return HttpResponseRedirect('/planning/current')
 	else:
 		
 		form = PlanningSwapForm(user_id = request.user.id, planning_id =  planning_id)
-		print form
 		return render(request, 'planning/auto_swap.html', {'form': form})
 
 @login_required
