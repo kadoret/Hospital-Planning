@@ -1,13 +1,13 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 
-from services.model import Calandars
-from servicess.forms import CalandarsForm
+from services.model import jobs
+from servicess.forms import JobsForm
 
 @login_required
-def service(request):
+def job(request):
 	aListServices = services.objects()
-	return render( request,  'services/service.html', {'servicesList': aListServices})
+	return render( request,  'services/job.html', {'servicesList': aListServices})
 
 @login_required
 def service_add(request):

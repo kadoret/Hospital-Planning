@@ -1,14 +1,14 @@
 from django import forms
-from models import Services, Dates, Timestamps, UserHospital
+from models import jobs, days, timestamps, doctors
 
-class ServicesForm(forms.ModelForm):
+class JobsForm(forms.ModelForm):
 	class Meta:
-        	model =  Services
+        	model =  jobs
 
-class DatesForm(forms.ModelForm):
+class DaysForm(forms.ModelForm):
 	class Meta:
-		model = Dates
+		model = days
 
 class TimestampsForm(forms.ModelForm):
 	class Meta:
-		model = Timestamps
+		model = timestamps

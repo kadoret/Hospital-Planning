@@ -1,40 +1,46 @@
 from django.db import models
-from services.models import Users_Services, Services
+from services.models import doctors_jobs, jobs
 # Create your models here.
 
-class Import_Configuration(models.Model):
+class import_planning_configuration(models.Model):
 	name = models.CharField(max_length = 40, unique=True)
-	services = models.ManyToManyField(Services)
+	jobs = models.ManyToManyField(jobs)
 
-class Planning_Free(models.Model):
+	def __unicode__(self):
+		return self.name
+
+class availabilities(models.Model):
 	class Meta:
-		unique_together=('day','ptimestamp','pservice', 'puser')
+		unique_together=('day','ptimestamp','pjob', 'pdoctor')
 	
 	day = models.DateField(auto_now=False, auto_now_add=False)
-	pservice = models.ForeignKey('services.Services')
-	ptimestamp =  models.ForeignKey('services.Timestamps')
-	puser = models.ForeignKey('services.UserHospital')
 
+	pjob = models.ForeignKey('services.jobs')
+	ptimestamp =  models.ForeignKey('services.timestamps')
+	pdoctor = models.ForeignKey('services.doctors')
+	
 
-class Planning(models.Model):
+class planning(models.Model):
 	class Meta:
-		unique_together=('ptimestamp','pservice','day')
+		unique_together=('ptimestamp','pjob','day')
 	
 	day = models.DateField(auto_now=False, auto_now_add=False)
-	pservice = models.ForeignKey('services.Services')
-	puser = models.ForeignKey('services.UserHospital')
-	ptimestamp =  models.ForeignKey('services.Timestamps')
+	official_approved =  models.BooleanField()
 	
-	change_to = models.ManyToManyField('self')
+	pjob = models.ForeignKey('services.jobs')
+	pdoctor = models.ForeignKey('services.doctors')
+	ptimestamp =  models.ForeignKey('services.timestamps')
+	
+	request_swap_to = models.ManyToManyField('self')
 
 	def save(self, *args, **kwargs):
-		super(Planning, self).save(*args, **kwargs)
+		super(planning, self).save(*args, **kwargs)
 		# like a proc on database
-		other_user_list = Users_Services.objects.exclude(
-							users_id = self.puser.id).filter(
-								services_id = self.pservice.id)
-		for user in other_user_list:
-			Planning_Free.objects.create(day = self.day,
-					     pservice_id = self.pservice.id,
+		other_doctor_list = doctors_jobs.objects.exclude(
+								doctors_id = self.pdoctor.id).filter(
+								jobs_id = self.pjob.id)
+		for doctor in other_doctor_list:
+			availabilities.objects.create(day = self.day,
+					     pjob_id = self.pjob.id,
 					     ptimestamp_id = self.ptimestamp.id, 
-					     puser_id = user.users_id)
+					     pdoctor_id = doctor.doctors_id)

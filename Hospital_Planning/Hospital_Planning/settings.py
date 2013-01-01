@@ -124,9 +124,9 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     'django.contrib.admindocs',
 )
-CUSTOM_USER_MODEL = 'services.UserHospital'
+CUSTOM_USER_MODEL = 'services.doctors'
 AUTHENTICATION_BACKENDS = (
-	'services.models.UserHospitalAuthBackend',
+	'services.models.doctors_auth_backend',
 	'django.contrib.auth.backends.ModelBackend',	
 )
 # A sample logging configuration. The only tangible logging

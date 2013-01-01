@@ -6,41 +6,39 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db.models import get_model
 # Create your models here.
 
-class Timestamps(models.Model):
+class timestamps(models.Model):
         serial =  models.CharField(max_length = 15, unique=True)
-	# not needed to calculate from start to stop as we identified them => static data
-	description =  models.CharField(max_length = 25)
+	description =  models.CharField(max_length = 35)
 
         def __unicode__(self):
                 return self.serial
 
-class Days(models.Model):
-        name = models.CharField(max_length = 15)
-        timestamp =  models.ManyToManyField(Timestamps)
+class days(models.Model):
+        name = models.CharField(max_length = 25)
+        timestamp =  models.ManyToManyField(timestamps)
 
         def __unicode__(self):
                 return self.name
 
-class Services(models.Model):
-	description = models.CharField(max_length = 50)
-	name =  models.CharField(max_length = 15)
+class jobs(models.Model):
+	name = models.CharField(max_length = 50)
 	serial =  models.CharField(max_length = 15, unique=True)
-	day = models.ManyToManyField(Days)
+	day = models.ManyToManyField(days)
 	linked_to = models.ManyToManyField('self')
 	
 	def __unicode__(self):
 		return self.name
 
-class UserHospital(User):
-	services = models.ManyToManyField(Services, through='Users_Services')
+class doctors(User):
+	djob = models.ManyToManyField(jobs, through='doctors_jobs')
 	objects = UserManager()
 
-class Users_Services(models.Model):
-	users = models.ForeignKey(UserHospital)
-	services =  models.ForeignKey(Services)
+class doctors_jobs(models.Model):
+	doctors = models.ForeignKey(doctors)
+	jobs =  models.ForeignKey(jobs)
 	status =  models.IntegerField()
 
-class UserHospitalAuthBackend(ModelBackend):
+class doctors_auth_backend(ModelBackend):
 	def authenticate(self, username=None, password=None):
 		try:
 			user = self.user_class.objects.get(username = username)
