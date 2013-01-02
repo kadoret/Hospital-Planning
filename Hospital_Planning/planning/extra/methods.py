@@ -1,19 +1,39 @@
 from services.models import doctors_jobs, doctors, timestamps, jobs
-from planning.models import planning, availabilities
+from planning.models import planning, availabilities, planning_swap
 from mail.models import mail_adress, mail
 from django import forms
 import datetime
-from datetime import timedelta
+from datetime import timedelta #strptime
 import csv
 
-def handle_uploaded_planning(, conf_id):
-	# get job list
-	job_list = import_planning_configuration.objects.get(id = conf_id)
+#TODO Handle re-entrance
+def handle_uploaded_planning(f):
 	try:
 		data = f.read()
-		data_rows = csv.reader(data, delimiter=';')*
+		data_rows = csv.reader(data, delimiter=';')
 		header = data_rows[0]
-			
+		cpt = 0
+		mapping = {}
+		for value in header:
+			if cpt != 0:
+				data = value.strips()
+				keys = data.split('_')
+				mapping[str(cpt)] = ( jobs.objects.get(serial = int(key[0])), 
+							 timestamp.get(serial = int(key[1])) )
+			cpt += cpt
+		del data_rows[0]
+		for row in data_rows:
+			cpt = 0
+			for value in row:			
+				if cpt != 0:
+					try:
+						planning.objects.create(day = datetime.strptime(row[0].strips(), '%d/%m/%Y'),
+								pdoctor = doctors.objects.get(username = value),
+								pjob_id = mapping[str(cpt)][0] ,
+								ptimestamp_id = mapping[str(cpt)][1] )
+					except IntegrityError, e:
+						pass
+			cpt += cpt		
 	except:
 		pass
 
@@ -84,8 +104,12 @@ class UserSwap(object):
 def setPlanningSwap(list_swap, subject, text, current_user, planning_id):
 	""" Flag all the planning to be swap """  
 	for planning_id_swap  in list_swap:
-		planning.objects.get(id = planning_id ).request_swap_to.add(planning_id_swap)
 		user_swap = planning.objects.get(id = planning_id_swap).id
+		planning_swap.objects.create(planning_to_swap = planning.objects.get(id = planning_id ),
+						doctor_to_swap = doctors.objects.get(id = current_user ),
+						planning_to_swap_with = planning.objects.get(id =planning_id_swap),
+						doctor_to_swap_with = doctors.objects.get(id = user_swap),
+						date = datetime.date.today())
 		mail.objects.create(cuser = doctors.objects.get(id = user_swap),
 				 subject = subject,
 				 text = text,

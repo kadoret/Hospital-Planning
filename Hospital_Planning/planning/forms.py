@@ -1,6 +1,5 @@
 from django import forms
 from planning.extra.methods import UserSwap, getUserSwapForPlanningSwap, setPlanningSwap
-from planning.models import import_planning_configuration
 import datetime
 from datetime import timedelta
 
@@ -9,7 +8,6 @@ class PlanningImportForm(forms.Form):
 	"""
 	"""
 	file  = forms.FileField()
-	import_type = forms.ModelChoiceField(queryset=import_planning_configuration.objects.all())
 	#TODO ovveride is_valid()
 		
 

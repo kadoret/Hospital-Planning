@@ -10,7 +10,7 @@ from django.test.client import Client
 
 from planning.forms import PlanningSwapForm
 from planning.extra.methods import UserSwap, getUserSwapForPlanningSwap
-from planning.models import planning, availabilities
+from planning.models import planning, availabilities, planning_swap
 from mail.models import mail_adress, mail
 from services.models import doctors, days, jobs, timestamps, doctors_jobs
 import datetime
@@ -97,7 +97,8 @@ class planningViewTest(TestCase):
 
 		result=mail.objects.filter( cuser = doctors.objects.get(id=4))
 		self.assertEqual(result[0].text, 'Je vais echanger ta garde')
-		self.assertEqual(planning.objects.get(id =1).request_swap_to.all()[0].id, 4)
+		self.assertEqual(planning_swap.objects.get(id =1).planning_to_swap.id, 1)
+		self.assertEqual(planning_swap.objects.get(id =1).planning_to_swap_with.id, 4)
 	
 class planningFormTest(TestCase):
 
