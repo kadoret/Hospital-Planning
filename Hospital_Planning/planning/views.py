@@ -2,7 +2,7 @@
 from django.shortcuts import render, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 
-from planning.models import planning
+from planning.models import planning, planning_swap
 from planning.forms import PlanningSwapForm
 from datetime import datetime, timedelta
 import datetime
@@ -11,15 +11,16 @@ import datetime
 def avaibilities_remove(request, avaibilities_id):
 	if avaibilities.objects.get(id = avaibilities_id).pdoctor == request.user:
 		avaibilities.objects.get(id = avaibilities_id).delete()
-	#TODO error message if it's not the right user
-	return HttpResponseRedirect('/planning/avaibilities_view')
+		return HttpResponseRedirect('/planning/avaibilities_view')
+	else:
+		return render(request, 'base/error.html')
 
 @login_required
 def avaibilities_view(request):
 	avaibilities_list = avaibilities.objects.filter(pdoctor = request.user,
 							day__range = [ datetime.date.today(),
 									datetime.date.today() + timedelta( days = 360 ) ])
-	return render(request, 'planning/ avaibilities.html', {'avaibilities_list': avaibilities_list}) 
+	return render(request, 'planning/avaibilities.html', {'avaibilities_list': avaibilities_list}) 
 
 @login_required
 def import_planning(request):
@@ -63,14 +64,15 @@ def auto_swap(request, planning_id):
 @login_required
 def swap_request_display(request):
 	aPlanningList = planning_swap.objects.filter( doctor_to_swap_with_id = request.user,
-							day__range = [ datetime.date.today(),
+							date__range = [ datetime.date.today(),
 									 datetime.date.today() + timedelta( days = 360 )])
 	return render(request, 'planning/swap_request_display.html', {'planning_list': aPlanningList}) 
 
 @login_required
 def swap_request_accept(request, swap_id):
 	aSwap = planning_swap.objects.get(id = swap_id)
-	planning.objects.get(id = aSwap.doctor_to_swap_id).update(doctor_id = aSwap.doctor_to_swap_with_id)
+	planning.objects.filter(id = aSwap.doctor_to_swap.id).update(pdoctor =aSwap.doctor_to_swap_with)
+	planning.objects.filter(id = aSwap.doctor_to_swap_with.id).update(pdoctor =aSwap.doctor_to_swap)
 	aSwap.delete()
 	return HttpResponseRedirect('/planning/swap_request_display')
 

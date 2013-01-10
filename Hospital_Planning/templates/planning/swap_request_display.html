@@ -1,0 +1,14 @@
+<h1>Demande d'échange en cours</h1>
+
+<ul>	{% for planning in planning_list %}
+	<li> {{ planning.planning_to_swap.day }}</li>
+	<li> {{ planning.planning_to_swap.ptimestamp.description }}</li>
+	<li> {{ planning.planning_to_swap.pjob.name }}</li>
+	<li> {{ planning.doctor_to_swap.username }}</li>
+	
+	<li> {{ planning.planning_to_swap_with.day }}</li>
+	<li> {{ planning.planning_to_swap_with.ptimestamp.description }}</li>
+	<li> {{ planning.planning_to_swap_with.pjob.name }}</li>
+	<li><a href="{% url planning.views.swap_request_accept planning.id %}">Accepter</a></li>
+	{% endfor %}
+</ul>

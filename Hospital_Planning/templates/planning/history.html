@@ -1,1 +1,8 @@
-<h1>all</h1>
+<h1>Anciennes gardes</h1>
+
+<ul>	{% for planning in current_planning %}
+	<li> {{ planning.day }}</li>
+	<li> {{ planning.ptimestamp.name }}</li>
+	<li> {{ planning.pjob.name }}</li>
+	{% endfor %}
+</ul>

@@ -99,7 +99,37 @@ class planningViewTest(TestCase):
 		self.assertEqual(result[0].text, 'Je vais echanger ta garde')
 		self.assertEqual(planning_swap.objects.get(id =1).planning_to_swap.id, 1)
 		self.assertEqual(planning_swap.objects.get(id =1).planning_to_swap_with.id, 4)
-	
+
+	def test_simple_swap_request_display(self):
+		"""	"""
+		swap = planning.objects.create(day = datetime.date.today(), pdoctor_id = 1, pjob_id = 1, ptimestamp_id = 1)
+		planning.objects.create(day = datetime.date.today(), pdoctor_id = 2, pjob_id = 2, ptimestamp_id = 1)
+		swap2 = planning.objects.create(day = datetime.date.today(), pdoctor_id = 4, pjob_id= 1, ptimestamp_id = 2)
+		planning.objects.create(day = datetime.date.today(), pdoctor_id = 3, pjob_id= 1, ptimestamp_id = 3)
+		planning_swap.objects.create(date = datetime.date.today(), 
+				planning_to_swap = swap2,
+				 planning_to_swap_with = swap, 
+				doctor_to_swap = doctors.objects.get(id=3),
+				doctor_to_swap_with = doctors.objects.get(id=1))
+		self.client.login(username='kdo1', password='toto')
+		response = self.client.get('/planning/swap_request_display')
+		self.assertEqual(response.status_code, 200)
+
+	def test_simple_swap_request_accept(self):
+		swap = planning.objects.create(day = datetime.date.today(), pdoctor_id = 1, pjob_id = 1, ptimestamp_id = 1)
+		planning.objects.create(day = datetime.date.today(), pdoctor_id = 2, pjob_id = 2, ptimestamp_id = 1)
+		swap2 = planning.objects.create(day = datetime.date.today(), pdoctor_id = 4, pjob_id= 1, ptimestamp_id = 2)
+		planning.objects.create(day = datetime.date.today(), pdoctor_id = 3, pjob_id= 1, ptimestamp_id = 3)
+		planning_swap.objects.create(date = datetime.date.today(),
+						planning_to_swap = swap2,
+						planning_to_swap_with = swap,
+						doctor_to_swap = doctors.objects.get(id=3),
+						doctor_to_swap_with = doctors.objects.get(id=1))
+		self.client.login(username='kdo1', password='toto')
+		test = self.client.post('/planning/swap_request_accept/1/')
+		self.assertEqual(planning.objects.get(id=1).pdoctor.id,3)
+		self.assertEqual(planning.objects.get(id=3).pdoctor.id,1)
+
 class planningFormTest(TestCase):
 
 	def setUp(self):
