@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+   <title>{% block title %}Tableau de garde{% endblock %}</title>
+</head>
+
+<body>
+
+<header>Planning de garde</header>
+    <nav>
+       {% block nav %}
+       <ul>
+		<li><a href="/admin/">Admin</a></li>
+           	<li><a href="/planning/current">Mon planning</a></li>
+		<li><a href="/planning/avaibilities_view">Mes disponibilitées</a></li>
+		<li><a href="/planning/swap_request_display">Demandes d'échanges</a></li>
+		<li><a href="/services/logout">Déconnexion</a></li>
+       </ul>
+       {% endblock %}
+   </nav>
+
+       {% block content %}{% endblock %}
+
+<footer>&copy; Kévin Nguyen</footer>
+</body>
+</html>
