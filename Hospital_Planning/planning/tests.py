@@ -9,7 +9,7 @@ from django.test import TestCase
 from django.test.client import Client
 
 from planning.forms import PlanningSwapForm
-from planning.extra.methods import UserSwap, getUserSwapForPlanningSwap
+from planning.extra.methods import UserSwap, getUserSwapForPlanningSwap, handle_uploaded_planning
 from planning.models import planning, availabilities, planning_swap
 from mail.models import mail_adress, mail
 from services.models import doctors, days, jobs, timestamps, doctors_jobs
@@ -18,9 +18,9 @@ from datetime import timedelta
 
 def init_db_test():
 	"""	"""
-	aDummyTimestamp1 = timestamps.objects.create(serial="S1", description="00h00 - 08h00")
-	aDummyTimestamp2 = timestamps.objects.create(serial="S2", description="08h00 - 16h00")
-	aDummyTimestamp3 = timestamps.objects.create(serial="S3", description="16h00 - 24h00")
+	aDummyTimestamp1 = timestamps.objects.create(serial="am", description="00h00 - 08h00")
+	aDummyTimestamp2 = timestamps.objects.create(serial="m", description="08h00 - 16h00")
+	aDummyTimestamp3 = timestamps.objects.create(serial="n", description="16h00 - 24h00")
 
 	adays1 = days.objects.create(name = "Monday")
 	adays2 = days.objects.create(name = "Tuesday")
@@ -63,7 +63,6 @@ class planningViewTest(TestCase):
 		init_db_test()
 		self.client = Client()	
 
-
 	def test_simple_view_current(self):
 		"""	"""
 		planning.objects.create(day = datetime.date.today(), pdoctor_id = 1, pjob_id = 1, ptimestamp_id = 1)
@@ -71,6 +70,14 @@ class planningViewTest(TestCase):
 		planning.objects.create(day = datetime.date.today(), pdoctor_id = 3, pjob_id=  1, ptimestamp_id = 2)
 		self.client.login(username='kdo1', password='toto')
 		response = self.client.get('/planning/current/')
+		self.assertEqual(response.status_code, 200)
+
+	def test_simple_view_history(self):
+		"""	"""
+		planning.objects.create(day = datetime.date.today() -  timedelta( days = 1), pdoctor_id = 1, pjob_id = 1, ptimestamp_id = 1)
+		planning.objects.create(day = datetime.date.today() -  timedelta( days = 1), pdoctor_id = 1, pjob_id = 2, ptimestamp_id = 3)
+		self.client.login(username='kdo1', password='toto')
+		response = self.client.get('/planning/history/')
 		self.assertEqual(response.status_code, 200)
 		
 	def test_simple_view_auto_swap(self):
@@ -82,6 +89,38 @@ class planningViewTest(TestCase):
 		self.client.login(username='kdo1', password='toto')
 		response = self.client.get('/planning/auto_swap/1/')
 		self.assertEqual(response.status_code, 200)
+
+	def test_simple_view_import(self):
+		"""	"""
+		self.client.login(username='kdo1', password='toto')
+		response = self.client.get('/planning/import_planning/')
+		self.assertEqual(response.status_code, 200)
+
+	def test_simple_view_import_post(self):
+		"""	"""
+		from django.core.files import File
+		f=open('/home/knguyen/dev/Hospital-Planning/Hospital_Planning/test.csv', 'r')
+		aTest = File(f)
+		self.client.login(username='kdo1', password='toto')
+		test = self.client.post('/planning/import_planning/',{ 'file': aTest })
+		self.assertEqual(24, len(planning.objects.all()))
+	
+	def test_simple_avaibilities_view(self):
+		"""     """
+		availabilities.objects.create(day = datetime.date.today(), pdoctor_id = 1, pjob_id = 1, ptimestamp_id = 1)
+		availabilities.objects.create(day = datetime.date.today(), pdoctor_id = 2, pjob_id = 2, ptimestamp_id = 1)
+		self.client.login(username='kdo1', password='toto')
+		response = self.client.get('/planning/avaibilities_view/')
+		self.assertEqual(response.status_code, 200)
+
+	def test_simple_avaibilities_remove(self):
+		"""     """
+		availabilities.objects.create(day = datetime.date.today(), pdoctor_id = 1, pjob_id = 1, ptimestamp_id = 1)
+		availabilities.objects.create(day = datetime.date.today(), pdoctor_id = 1, pjob_id = 2, ptimestamp_id = 1)
+		availabilities.objects.create(day = datetime.date.today(), pdoctor_id = 1, pjob_id = 3, ptimestamp_id = 1)
+		self.client.login(username='kdo1', password='toto')
+		test = self.client.post('/planning/avaibilities_remove/1/')
+		self.assertEqual(len(availabilities.objects.filter(pdoctor_id =1)), 2)
 
 	def test_simple_post_view_auto_swap(self):
 		"""	"""
@@ -108,7 +147,7 @@ class planningViewTest(TestCase):
 		planning.objects.create(day = datetime.date.today(), pdoctor_id = 3, pjob_id= 1, ptimestamp_id = 3)
 		planning_swap.objects.create(date = datetime.date.today(), 
 				planning_to_swap = swap2,
-				 planning_to_swap_with = swap, 
+				planning_to_swap_with = swap, 
 				doctor_to_swap = doctors.objects.get(id=3),
 				doctor_to_swap_with = doctors.objects.get(id=1))
 		self.client.login(username='kdo1', password='toto')
@@ -178,6 +217,13 @@ class planningFormTest(TestCase):
 		planning.objects.create(day = datetime.date.today(), pdoctor_id = 2, pjob_id = 1, ptimestamp_id = 1)
 		planning.objects.create(day = datetime.date.today(), pdoctor_id = 3, pjob_id = 2, ptimestamp_id = 3)
 		planning.objects.create(day = datetime.date.today(), pdoctor_id = 4, pjob_id = 3, ptimestamp_id = 2)
+
+	def test_import(self):
+		from django.core.files import File
+		f=open('/home/knguyen/dev/Hospital-Planning/Hospital_Planning/test.csv', 'r')
+		aTest = File(f)
+		self.assertTrue(handle_uploaded_planning(aTest))
+		self.assertEqual(24, len(planning.objects.all()))
 
 	def test_basic_UserSwap(self):
 		"""

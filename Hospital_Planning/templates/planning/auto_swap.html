@@ -1,4 +1,7 @@
-<form action="/auto/swap/" method="post">{% csrf_token %}
+{% extends "base/base.html" %}
+{% block content %}
+<form action="planning/auto_swap/" method="post">{% csrf_token %}
 {{ form.as_p }}
-<input type="submit" value="Submit" />
+<input type="submit" value="Envoyer" />
 </form>
+{% block content %}

@@ -2,32 +2,32 @@
 from django.shortcuts import render, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 
-from planning.models import planning, planning_swap
-from planning.forms import PlanningSwapForm
+from planning.models import planning, planning_swap, availabilities
+from planning.forms import PlanningSwapForm, PlanningImportForm
 from datetime import datetime, timedelta
 import datetime
 
 @login_required
 def avaibilities_remove(request, avaibilities_id):
-	if avaibilities.objects.get(id = avaibilities_id).pdoctor == request.user:
-		avaibilities.objects.get(id = avaibilities_id).delete()
+	if availabilities.objects.get(id = avaibilities_id).pdoctor == request.user:
+		availabilities.objects.get(id = avaibilities_id).delete()
 		return HttpResponseRedirect('/planning/avaibilities_view')
 	else:
 		return render(request, 'base/error.html')
 
 @login_required
 def avaibilities_view(request):
-	avaibilities_list = avaibilities.objects.filter(pdoctor = request.user,
+	current_avaibilities = availabilities.objects.filter(pdoctor = request.user,
 							day__range = [ datetime.date.today(),
 									datetime.date.today() + timedelta( days = 360 ) ])
-	return render(request, 'planning/avaibilities.html', {'avaibilities_list': avaibilities_list}) 
+	return render(request, 'planning/avaibilities.html', {'current_avaibilities': current_avaibilities}) 
 
 @login_required
 def import_planning(request):
 	if request.method == 'POST':
 		form = PlanningImportForm(request.POST, request.FILES)
 		if form.is_valid():
-			handle_uploaded_planning(request.FILES['file'])
+			form.save(file = request.FILES['file'])
 			return HttpResponseRedirect('/planning/current')
 	else:
 		form = PlanningImportForm()
@@ -44,7 +44,7 @@ def current(request):
 @login_required
 def history(request):
 	aPlanningList = planning.objects.filter(
-						puser = request.user
+						pdoctor = request.user
 							).exclude( day__range = [ datetime.date.today(),
 										  datetime.date.today() + timedelta( days = 360 )])
 	return render (request, 'planning/history.html', {'current_planning': aPlanningList})

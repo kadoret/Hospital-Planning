@@ -2,7 +2,7 @@
 
 <ul>	{% for planning in current_planning %}
 	<li> {{ planning.day }}</li>
-	<li> {{ planning.ptimestamp.name }}</li>
+	<li> {{ planning.ptimestamp.description }}</li>
 	<li> {{ planning.pjob.name }}</li>
 	{% endfor %}
 </ul>

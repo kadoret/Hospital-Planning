@@ -1,21 +1,18 @@
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, HttpResponseRedirect
+from django.contrib.auth import logout
+from services.form import LoginForm
 
-from services.model import jobs
-from servicess.forms import JobsForm
-
-@login_required
-def job(request):
-	aListServices = services.objects()
-	return render( request,  'services/job.html', {'servicesList': aListServices})
-
-@login_required
-def service_add(request):
+def hospital_login(request):
 	if request.method == 'POST':
-		form = ServicesForm(request.POST) 
-		if form.is_valid():
-			form.save() 
-			return HttpResponseRedirect('/index/')
+		form = LoginForm(request.POST)
+		if form.is_valid(request = request):
+			return HttpResponseRedirect('/planning/current')
+		print 'ko'
+		return HttpResponseRedirect('/')
 	else:
-		form =  ServicesForm()
-		return render(request, 'services/add.html', {'form': form})
+		form = LoginForm()
+		return render(request, 'services/login.html', {'form': form})
+
+def hospital_logout(request):
+	logout(request)
+	return HttpResponseRedirect('/')

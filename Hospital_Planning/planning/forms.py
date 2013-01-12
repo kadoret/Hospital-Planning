@@ -1,14 +1,19 @@
 from django import forms
-from planning.extra.methods import UserSwap, getUserSwapForPlanningSwap, setPlanningSwap
+from planning.extra.methods import UserSwap, getUserSwapForPlanningSwap, setPlanningSwap, handle_uploaded_planning
 import datetime
 from datetime import timedelta
 
 
 class PlanningImportForm(forms.Form):
 	"""
+	class PlanningImportForm
+		Form to import csv data
 	"""
 	file  = forms.FileField()
 	#TODO ovveride is_valid()
+
+	def save(*args, **kwargs):
+		handle_uploaded_planning(kwargs['file'])
 		
 
 class PlanningSwapForm(forms.Form):

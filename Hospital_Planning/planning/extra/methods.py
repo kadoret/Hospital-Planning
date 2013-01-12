@@ -3,39 +3,53 @@ from planning.models import planning, availabilities, planning_swap
 from mail.models import mail_adress, mail
 from django import forms
 import datetime
-from datetime import timedelta #strptime
+from datetime import timedelta
 import csv
 
 #TODO Handle re-entrance
 def handle_uploaded_planning(f):
+	""" will import the planning from csv to the database """
 	try:
-		data = f.read()
-		data_rows = csv.reader(data, delimiter=';')
-		header = data_rows[0]
-		cpt = 0
+		data_rows = csv.reader(f, delimiter=';',  quoting=csv.QUOTE_NONE)
+		cpt_header = True
 		mapping = {}
-		for value in header:
-			if cpt != 0:
-				data = value.strips()
-				keys = data.split('_')
-				mapping[str(cpt)] = ( jobs.objects.get(serial = int(key[0])), 
-							 timestamp.get(serial = int(key[1])) )
-			cpt += cpt
-		del data_rows[0]
 		for row in data_rows:
 			cpt = 0
-			for value in row:			
-				if cpt != 0:
-					try:
-						planning.objects.create(day = datetime.strptime(row[0].strips(), '%d/%m/%Y'),
-								pdoctor = doctors.objects.get(username = value),
-								pjob_id = mapping[str(cpt)][0] ,
-								ptimestamp_id = mapping[str(cpt)][1] )
-					except IntegrityError, e:
-						pass
-			cpt += cpt		
-	except:
-		pass
+			# parsing the header
+			if cpt_header:
+				header = row
+				# get the column
+				for value in header:
+					# ignore date
+					if cpt != 0:
+						data = value.strip()
+						keys = data.split('_')
+						mapping[str(cpt)] = ( jobs.objects.get(serial = keys[0] ),
+									timestamps.objects.get(serial = keys[1]  ) )
+					cpt = cpt + 1
+			else:
+				# go through the planning
+				for value in row:			
+					if cpt != 0:
+						try:
+							aDoctor = value.strip()
+							# No data some time it's happen
+							if aDoctor != '':
+								planning.objects.create(day = datetime.datetime.strptime(row[0].strip(), '%d/%m/%Y'),
+										pdoctor = doctors.objects.get(username = aDoctor),
+										pjob = mapping[str(cpt)][0] ,
+										ptimestamp = mapping[str(cpt)][1] )
+						except DoesNotExist, e:
+							return False
+						except IntegrityError, e:
+							# Duplicate case
+							print e
+							return False
+					cpt = cpt + 1
+			cpt_header = False
+		return True		
+	except DoesNotExist, e:
+		return False
 
 class planning_populate(object):
 

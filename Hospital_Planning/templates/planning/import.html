@@ -1,4 +1,7 @@
+{% extends "base/base.html" %}
+{% block content %}
 <form action="planning/import_planning/" method="post">{% csrf_token %}
 {{ form.as_p }}
 <input type="submit" value="Importer" />
 </form>
+{% endblock %}

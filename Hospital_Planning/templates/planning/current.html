@@ -1,5 +1,6 @@
+{% extends "base/base.html" %}
+{% block content %}
 <h1>Tableau de garde courant</h1>
-
 <ul>	{% for planning in current_planning %}
 	<li> {{ planning.day }}</li>
 	<li> {{ planning.ptimestamp.name }}</li>
@@ -7,3 +8,4 @@
 	<li> <a href="{% url planning.views.auto_swap planning.id %}">Echanger</a></li>
 	{% endfor %}
 </ul>
+{% endblock %}

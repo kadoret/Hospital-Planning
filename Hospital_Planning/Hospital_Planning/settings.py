@@ -99,6 +99,8 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'Hospital_Planning.urls'
 
+LOGIN_URL = '/login'
+LOGIN_REDIRECT_URL = '/planning'
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'Hospital_Planning.wsgi.application'
 
