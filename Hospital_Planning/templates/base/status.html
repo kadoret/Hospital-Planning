@@ -1,0 +1,11 @@
+{% if redirect %} 
+{% if status %} 
+<div class="alert alert-error">
+<strong> Félicitation !!! </strong> {{ message }}
+</div>
+{% else %}
+<div class="alert alert-error">
+<strong> Erreur !!! </strong> {{ message }}
+</div>
+{% endif %}
+{% endif %}

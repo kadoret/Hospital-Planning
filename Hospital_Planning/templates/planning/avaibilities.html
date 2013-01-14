@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% block content %}
+{% include "base/status.html" %}
 <h1>Tableau de disponibilité</h1>
 <ul>	{% for planning in current_avaibilities %}
 	<li> {{ planning.day }}</li>

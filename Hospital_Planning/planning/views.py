@@ -13,7 +13,7 @@ def avaibilities_remove(request, avaibilities_id):
 		availabilities.objects.get(id = avaibilities_id).delete()
 		return HttpResponseRedirect('/planning/avaibilities_view')
 	else:
-		return render(request, 'base/error.html')
+		return render(request, '/planning/avaibilities_view', {'redirect' : True, 'status': False, 'message' : 'Tentation d usurpation, action annulee' })
 
 @login_required
 def avaibilities_view(request):
@@ -39,7 +39,7 @@ def current(request):
 						pdoctor = request.user,
 						day__range = [ datetime.date.today(),
 								datetime.date.today() + timedelta( days = 360 ) ])
-	return render(request, 'planning/current.html', {'current_planning': aPlanningList})
+	return render(request, 'planning/planning_view.html', {'current_planning': aPlanningList, 'old': False})
 
 @login_required
 def history(request):
@@ -47,7 +47,7 @@ def history(request):
 						pdoctor = request.user
 							).exclude( day__range = [ datetime.date.today(),
 										  datetime.date.today() + timedelta( days = 360 )])
-	return render (request, 'planning/history.html', {'current_planning': aPlanningList})
+	return render (request, 'planning/planning_view.html', {'current_planning': aPlanningList, 'old': True})
 
 @login_required
 def auto_swap(request, planning_id):

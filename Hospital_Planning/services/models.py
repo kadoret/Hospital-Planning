@@ -13,12 +13,20 @@ class timestamps(models.Model):
         def __unicode__(self):
                 return self.serial
 
+	class Meta:
+		verbose_name = 'Horaire de garde'
+		verbose_name_plural = 'Horaires de garde'
+
 class days(models.Model):
         name = models.CharField(max_length = 25)
         timestamp =  models.ManyToManyField(timestamps)
 
         def __unicode__(self):
                 return self.name
+
+	class Meta:
+		verbose_name = 'Journee de garde'
+		verbose_name_plural = 'Journees de garde'
 
 class jobs(models.Model):
 	name = models.CharField(max_length = 50)
@@ -29,14 +37,29 @@ class jobs(models.Model):
 	def __unicode__(self):
 		return self.name
 
+	class Meta:
+		verbose_name = 'Poste de garde'
+		verbose_name_plural = 'Postes de garde'
+
 class doctors(User):
 	djob = models.ManyToManyField(jobs, through='doctors_jobs')
 	objects = UserManager()
+
+	class Meta:
+		verbose_name = 'Docteur'
+		verbose_name_plural = 'Docteurs'
 
 class doctors_jobs(models.Model):
 	doctors = models.ForeignKey(doctors)
 	jobs =  models.ForeignKey(jobs)
 	status =  models.IntegerField()
+
+	def __unicode__(self):
+		return self.doctors.username + ' ' + self.jobs.name
+
+	class Meta:
+		verbose_name = 'Assignation des gardes'
+		verbose_name_plural = 'Assignation des gardes'
 
 class doctors_auth_backend(ModelBackend):
 	def authenticate(self, username=None, password=None):

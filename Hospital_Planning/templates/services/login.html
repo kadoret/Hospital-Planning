@@ -1,4 +1,13 @@
-<form action="services/login/" method="post">{% csrf_token %}
+{% extends "base/base.html" %}
+{% block nav %} {% endblock %}
+{% block link %}Bienvenue sur Hospital planning, veuillez vous identifier {% endblock %}
+{% block content %}
+
+{% include "base/status.html" %}
+
+<form action="/" method="post">{% csrf_token %}
 {{ form.as_p }}
 <input type="submit" value="Entrer" />
+<input type="hidden" name="next" value="{{ next }}"/>
 </form>
+{% endblock %}

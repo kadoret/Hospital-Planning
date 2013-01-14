@@ -2,25 +2,94 @@
 <html lang="fr">
 <head>
    <title>{% block title %}Tableau de garde{% endblock %}</title>
+   	<link href="{{ STATIC_URL }}css/bootstrap.css" rel="stylesheet" media="screen">
+	<link href="{{ STATIC_URL }}css/bootstrap-responsive.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+      .sidebar-nav {
+        padding: 9px 0;
+      }
+    </style>
 </head>
 
 <body>
-
-<header>Planning de garde</header>
-    <nav>
-       {% block nav %}
-       <ul>
-		<li><a href="/admin/">Admin</a></li>
-           	<li><a href="/planning/current">Mon planning</a></li>
-		<li><a href="/planning/avaibilities_view">Mes disponibilitées</a></li>
-		<li><a href="/planning/swap_request_display">Demandes d'échanges</a></li>
-		<li><a href="/services/logout">Déconnexion</a></li>
-       </ul>
-       {% endblock %}
-   </nav>
-
-       {% block content %}{% endblock %}
-
-<footer>&copy; Kévin Nguyen</footer>
+<div class="navbar navbar-inverse navbar-fixed-top">
+	<div class="navbar-inner">
+		<div class="container-fluid">
+		{% block nav %}
+		
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+			<a class="brand" href="#">Hospital planning</a>
+			<div class="nav-collapse collapse">
+			
+            		<p class="navbar-text pull-right">
+				<a href="/services/logout" class="navbar-link">Déconnexion</a>
+            		</p>
+				<ul class="nav">
+					{% if perms.admin %}
+						<li><a href="/admin">Administration</a></li>
+					{% endif %}
+					<li><a href="/blog/index">Accueil</a></li>
+					 <li class="dropdown">
+                				<a class="dropdown-toggle" id="planning" role="button" data-toggle="dropdown" href="#">Mon tableau de garde <b class="caret"></b></a>
+                				<ul id="menu_planning" class="dropdown-menu" role="menu" aria-labelledby="planning">
+                  					<li><a tabindex="-1" href="/planning/current">A venir</a></li>
+							<li><a tabindex="-1" href="/planning/history">Déja effectué</a></li>
+							<li><a tabindex="-1" href="/planning/avaibilities_view">Jours libres</a></li>
+							<li class="divider"></li>
+							<li><a tabindex="-1" href="/planning/swap_request_display">Demande(s) d'échange(s)</a></li>
+							{% if perms.planning.add_planning %}
+								<li><a tabindex="-1" href="/planning/import_planning">Importer planning</a></li>
+							{% endif %}
+               					</ul>
+              				</li>
+					<li><a href="/mail/">Messages</a></li>
+					<li><a href="/blog/about">About</a></li>
+				</ul>
+			</div>
+			{% endblock %}
+		</div>
+	</div>
+</div>
+<div class="container-fluid">
+	<div class="row-fluid">
+		<div class="span2">
+		{% block link %}
+          		<div class="well sidebar-nav">
+            			<ul class="nav nav-list">
+              			<li class="nav-header">Sites webs Marseilles</li>
+              			<li><a href="http://www.marseille.fr">Ville de Marseilles</a></li>
+              			<li><a href="http://www.om.net">Olympique de Marseilles</a></li>
+              			<li class="nav-header">Sites webs Médicaux</li>
+              			<li><a href="http://www.fhf.fr/">Hopitaux de France</a></li>
+				<li><a href="http://www.ap-hm.fr/samu13/fr/site/accueil.asp">Samu à Marseilles</a></li>
+				<li class="nav-header">&copy; Kévin Nguyen</a></li>
+            			</ul>
+          		</div><!--/.well -->
+		{% endblock %}
+        	</div><!--/span-->
+		<div class="span7">
+		{% block content %}{% endblock %}
+		</div>
+		<div class="span3">
+		{% block help %}{% endblock %}
+		</div>
+	</div>
+</div>
+<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('.dropdown-toggle').dropdown();
+        });
+   </script>
+ 
 </body>
 </html>
