@@ -6,7 +6,7 @@ def hospital_login(request):
 	if request.method == 'POST':
 		form = LoginForm(request.POST)
 		if form.is_valid(request = request):
-			return HttpResponseRedirect('/planning/current')
+			return HttpResponseRedirect('/planning/my_planning_view/0/')
 		return render(request, 'services/login.html', {'form': form, 'redirect' : True, 'status': False, 'message' : 'Impossible de se connecter, utilisateur ou mot de passe invalide' })
 	else:
 		form = LoginForm()

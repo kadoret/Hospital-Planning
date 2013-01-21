@@ -1,10 +1,12 @@
 from services.models import doctors_jobs, doctors, timestamps, jobs
-from planning.models import planning, availabilities, planning_swap
+from planning.models import planning, planning_swap
 from mail.models import mail_adress, mail
 from django import forms
 import datetime
 from datetime import timedelta
-import csv
+import csv, re
+from django.core.exceptions import ObjectDoesNotExist 
+from django.db import IntegrityError
 
 #TODO Handle re-entrance
 def handle_uploaded_planning(f):
@@ -13,42 +15,53 @@ def handle_uploaded_planning(f):
 		data_rows = csv.reader(f, delimiter=';',  quoting=csv.QUOTE_NONE)
 		cpt_header = True
 		mapping = {}
+		date_match = re.compile(r"[0-9]{2}/[0-9]{2}/[0-9]{4}")
 		for row in data_rows:
 			cpt = 0
+			date_planning = None
 			# parsing the header
 			if cpt_header:
 				header = row
 				# get the column
 				for value in header:
 					# ignore date
-					if cpt != 0:
-						data = value.strip()
-						keys = data.split('_')
-						mapping[str(cpt)] = ( jobs.objects.get(serial = keys[0] ),
-									timestamps.objects.get(serial = keys[1]  ) )
+					data = value.strip()
+					data = data.strip('"')
+					data = data.strip('\'')
+					keys = data.split('_')
+					# ignore date and empty case
+					if len(keys) == 2:
+						mapping[str(cpt)] = ( jobs.objects.get(serial__iexact = keys[0] ),
+									timestamps.objects.get(serial__iexact = keys[1]  ) )
+						cpt_header = False
 					cpt = cpt + 1
 			else:
 				# go through the planning
-				for value in row:			
-					if cpt != 0:
-						try:
-							aDoctor = value.strip()
-							# No data some time it's happen
-							if aDoctor != '':
-								planning.objects.create(day = datetime.datetime.strptime(row[0].strip(), '%d/%m/%Y'),
-										pdoctor = doctors.objects.get(username = aDoctor),
-										pjob = mapping[str(cpt)][0] ,
-										ptimestamp = mapping[str(cpt)][1] )
-						except DoesNotExist, e:
-							return False
-						except IntegrityError, e:
-							# Duplicate case
-							print e
-							return False
+				for value in row:
+					aDoctor = value.strip()
+					aDoctor = aDoctor.strip('"')
+					aDoctor = aDoctor.strip('\'')
+					try:
+						# No data some time it's happena
+						if aDoctor != '' and date_planning is not None:
+							planning.objects.create(day = datetime.datetime.strptime(date_planning, '%d/%m/%Y'),
+									pdoctor = doctors.objects.get(username__iexact = aDoctor),
+									pjob = mapping[str(cpt)][0] ,
+									ptimestamp = mapping[str(cpt)][1] )
+				
+						elif  date_match.match(aDoctor) is not None:
+							date_planning = aDoctor								
+
+					except ObjectDoesNotExist, e:
+						pass
+					#	return False
+					except IntegrityError, e:
+						pass
+						# Duplicate case
+					#	return False
 					cpt = cpt + 1
-			cpt_header = False
 		return True		
-	except DoesNotExist, e:
+	except ObjectDoesNotExist, e:
 		return False
 
 class planning_populate(object):
@@ -84,7 +97,7 @@ class UserSwap(object):
 	def __str__(self):
 		return ' '.join([self.username,
 				 '-',    str(self.date),
-				 '(',    str(self.description), 
+				 '(',    self.description, 
 				 ')', str(self.service_desc)])
 
 	def __unicode__(self):
@@ -159,14 +172,23 @@ def getUserSwapForPlanningSwap(current_user, planning_id):
 					for item in user_current_job.linked_to.values_list('id', flat=True) ]
 	jobs_linked_list.append(int(planning_swap.pjob_id))
 	# now get the dates we can swap for the user, we check that the service is elegible. Store result in a set
-	current_user_date_swap =  [ ( item1, int(item2)  ) 
-					for item1,item2,item3 in 
-						availabilities.objects.filter
-									( pdoctor = current_user, 
-									  day__range= [ datetime.date.today(), 
-									  		datetime.date.today() + timedelta( days = 360 ) ]
-									).values_list('day','ptimestamp','pjob')
-						if int(item3) in jobs_linked_list ]
+#	current_user_date_swap =  [ ( item1, int(item2)  ) 
+#					for item1,item2,item3 in 
+#						availabilities.objects.filter
+#									( pdoctor = current_user, 
+#									  day__range= [ datetime.date.today(), 
+#									  		datetime.date.today() + timedelta( days = 360 ) ]
+#									).values_list('day','ptimestamp','pjob')
+#						if int(item3) in jobs_linked_list ]
+	current_user_none_date_swap = [ ( item1, int(item2)  )
+						for item1,item2,item3 in
+							planning.objects.filter
+									( pdoctor = current_user,
+										day__range= [ datetime.date.today(),
+												datetime.date.today() + timedelta( days = 360 ) ]
+									).values_list('day','ptimestamp','pjob') ]
+#							if int(item3) in jobs_linked_list ]
+
 	# now get the dates we can swap for the other user, we check that the service is elegible. Store result in a dic set
 	elegible_users_date_swap = {}
 	for anElegibleUser in elegible_users:
@@ -178,9 +200,13 @@ def getUserSwapForPlanningSwap(current_user, planning_id):
 	# we perfome set diff between the user as refrence and the other users
 	final = []
 	for user_id in elegible_users_date_swap.keys():
-		for aSwapInfo in set(current_user_date_swap).intersection( set( elegible_users_date_swap[user_id] ) ):
-			final.append( 
-				UserSwap( 
-					doctors.objects.get(id = long(user_id))
-					).setSwapInfo(aSwapInfo, planning_id) )
+		for aSwapInfo in set(elegible_users_date_swap[user_id]).difference( set( current_user_none_date_swap ) ):
+#		for aSwapInfo in set(current_user_date_swap).intersection( set( elegible_users_date_swap[user_id] ) ):
+			#tricky it's the garanty for having 2 job complient 
+			if planning.objects.filter(pdoctor_id = user_id, day = aSwapInfo[0], ptimestamp_id = aSwapInfo[1]
+							).values_list('pjob_id', flat=True)[0] in jobs_linked_list: 
+				final.append( 
+					UserSwap( 
+						doctors.objects.get(id = long(user_id))
+						).setSwapInfo(aSwapInfo, planning_id) )
 	return final

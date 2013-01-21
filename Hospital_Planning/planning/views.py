@@ -1,26 +1,61 @@
 # Create your views here.
 from django.shortcuts import render, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
-
-from planning.models import planning, planning_swap, availabilities
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from planning.models import planning, planning_swap, reserved_days
 from planning.forms import PlanningSwapForm, PlanningImportForm
 from datetime import datetime, timedelta
 import datetime
 
+
+class calendar:
+	def __init__(self, day, description):
+		self.day = day
+		self.description = description	
+	
 @login_required
-def avaibilities_remove(request, avaibilities_id):
-	if availabilities.objects.get(id = avaibilities_id).pdoctor == request.user:
-		availabilities.objects.get(id = avaibilities_id).delete()
-		return HttpResponseRedirect('/planning/avaibilities_view')
-	else:
-		return render(request, '/planning/avaibilities_view', {'redirect' : True, 'status': False, 'message' : 'Tentation d usurpation, action annulee' })
+def reserved_day_add(request, year, month, day):
+	aDay = datetime.date(int(year),int(month),int(day))
+	reserved_days.objects.create(day = aDay, pdoctor_id = request.user.id)
+	print request
+	return HttpResponseRedirect(request.REQUEST.get('next', '/planning/calendar_view'))
 
 @login_required
-def avaibilities_view(request):
-	current_avaibilities = availabilities.objects.filter(pdoctor = request.user,
-							day__range = [ datetime.date.today(),
-									datetime.date.today() + timedelta( days = 360 ) ])
-	return render(request, 'planning/avaibilities.html', {'current_avaibilities': current_avaibilities}) 
+def reserved_day_remove(request, year, month, day):
+	aDay = datetime.date(int(year),int(month),int(day))
+	object_to_remove = reserved_days.objects.get(day = aDay, pdoctor_id = request.user.id)
+	object_to_remove.delete()
+	return HttpResponseRedirect(request.REQUEST.get('next', '/planning/calendar_view'))
+
+@login_required
+def calendar_view(request):
+	#get working day
+	day_begin =  datetime.date.today()
+	day_end = datetime.date.today() + timedelta( days = 360 )
+	calendar_list = []
+
+	while day_begin < day_end:
+		aPlanning = planning.objects.filter(pdoctor = request.user, day = day_begin)
+		aReserved = reserved_days.objects.filter(pdoctor = request.user, day = day_begin)
+		if not aPlanning and not aReserved:
+			calendar_list.append(calendar(day_begin, 0))
+		elif aReserved:
+			calendar_list.append(calendar(day_begin, 2))
+		else:
+			calendar_list.append(calendar(day_begin, 1))
+		day_begin = day_begin +  timedelta( days = 1 )
+				
+	paginator = Paginator(calendar_list, 15)
+	page = request.GET.get('page')
+	try:
+		my_calandar_page = paginator.page(page)
+	except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+		my_calandar_page = paginator.page(1)
+	except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+		my_calandar_page = paginator.page(paginator.num_pages)
+	return render(request, 'planning/avaibilities.html', {'calendar_list': my_calandar_page}) 
 
 @login_required
 def import_planning(request):
@@ -28,23 +63,21 @@ def import_planning(request):
 		form = PlanningImportForm(request.POST, request.FILES)
 		if form.is_valid():
 			form.save(file = request.FILES['file'])
-			return HttpResponseRedirect('/planning/current')
+			return HttpResponseRedirect('/planning/my_planning_view/0')
 	else:
 		form = PlanningImportForm()
 		return render(request, 'planning/import.html', {'form': form})
 
 @login_required
-def current(request):
-	aPlanningList = planning.objects.filter(
+def my_planning_view(request, old = '0'):
+	if old == '0':
+		aPlanningList = planning.objects.filter(
 						pdoctor = request.user,
 						day__range = [ datetime.date.today(),
 								datetime.date.today() + timedelta( days = 360 ) ])
-	return render(request, 'planning/planning_view.html', {'current_planning': aPlanningList, 'old': False})
-
-@login_required
-def history(request):
-	aPlanningList = planning.objects.filter(
-						pdoctor = request.user
+		return render(request, 'planning/planning_view.html', {'current_planning': aPlanningList, 'old': False})
+	else:
+		aPlanningList = planning.objects.filter(pdoctor = request.user
 							).exclude( day__range = [ datetime.date.today(),
 										  datetime.date.today() + timedelta( days = 360 )])
 	return render (request, 'planning/planning_view.html', {'current_planning': aPlanningList, 'old': True})
@@ -55,7 +88,7 @@ def auto_swap(request, planning_id):
 		form = PlanningSwapForm(request.POST, doctor_id = request.user.id, planning_id = planning_id)
 		if form.is_valid():
 			form.save(doctor_id = request.user.id, planning_id = planning_id)
-			return HttpResponseRedirect('/planning/current')
+			return HttpResponseRedirect('/planning/my_planning_view/0')
 	else:
 		
 		form = PlanningSwapForm(doctor_id = request.user.id, planning_id =  planning_id)
@@ -66,11 +99,29 @@ def swap_request_display(request):
 	aPlanningList = planning_swap.objects.filter( doctor_to_swap_with_id = request.user,
 							date__range = [ datetime.date.today(),
 									 datetime.date.today() + timedelta( days = 360 )])
-	return render(request, 'planning/swap_request_display.html', {'planning_list': aPlanningList}) 
+	return render(request, 'planning/swap_request_display.html', {'planning_list': aPlanningList})
 
 @login_required
-def swap_request_accept(request, swap_id):
+def my_swap_request_display(request):
+	aPlanningList = planning_swap.objects.filter( doctor_to_swap_id = request.user,
+							date__range = [ datetime.date.today(),
+									datetime.date.today() + timedelta( days = 360 )])
+	return render(request, 'planning/swap_request_display.html', {'planning_list': aPlanningList})
+
+@login_required
+def cancel_swap(request, swap_id):
 	aSwap = planning_swap.objects.get(id = swap_id)
+	aSwap.delete()
+	return HttpResponseRedirect('/planning/my_swap_request_display')
+
+@login_required
+def accept_swap(request, swap_id):
+	aSwap = planning_swap.objects.get(id = swap_id)
+	# remove if exist other swap request
+	other_swap = planning_swap.objects.filter(date = aSwap.date, doctor_to_swap_id = aSwap.doctor_to_swap.id )
+	for swap in other_swap:
+		swap.delete()
+	# update calandar
 	planning.objects.filter(id = aSwap.doctor_to_swap.id).update(pdoctor =aSwap.doctor_to_swap_with)
 	planning.objects.filter(id = aSwap.doctor_to_swap_with.id).update(pdoctor =aSwap.doctor_to_swap)
 	aSwap.delete()

@@ -2,16 +2,15 @@ from django.db import models
 from services.models import doctors_jobs, jobs
 # Create your models here.
 
-class availabilities(models.Model):
+		
+
+class reserved_days(models.Model):
 	class Meta:
-		unique_together=('day','ptimestamp','pjob', 'pdoctor')
+		unique_together=('day','pdoctor')
 	
 	day = models.DateField(auto_now=False, auto_now_add=False)
 
-	pjob = models.ForeignKey('services.jobs')
-	ptimestamp =  models.ForeignKey('services.timestamps')
 	pdoctor = models.ForeignKey('services.doctors')
-	
 
 class planning(models.Model):
 	class Meta:
@@ -26,35 +25,36 @@ class planning(models.Model):
 	
 	request_swap_to = models.ManyToManyField('self', through='planning_swap', symmetrical=False)
 
-	def save(self, *args, **kwargs):
-		super(planning, self).save(*args, **kwargs)
+#	def save(self, *args, **kwargs):
+#		super(planning, self).save(*args, **kwargs)
 		# like a proc on database
-		other_doctor_list = doctors_jobs.objects.exclude(
-								doctors_id = self.pdoctor.id).filter(
-									jobs_id = self.pjob.id)
-		for doctor in other_doctor_list:
-			availabilities.objects.create(day = self.day,
-					     pjob_id = self.pjob.id,
-					     ptimestamp_id = self.ptimestamp.id, 
-					     pdoctor_id = doctor.doctors_id)
+#		other_doctor_list = doctors_jobs.objects.exclude(
+#								doctors_id = self.pdoctor.id).filter(
+#									jobs_id = self.pjob.id)
 
-	def delete(self, *args, **kwargs):
-		super(planning, self).delete(*args, **kwargs)
-		availabilities.objects.create(day = self.day,
-						pjob_id = self.pjob.id,
-						ptimestamp_id = self.ptimestamp.id,
-						pdoctor_id = self.doctors.id)
+#		for doctor in other_doctor_list:
+#			availabilities.objects.create(day = self.day,
+#					     pjob_id = self.pjob.id,
+#					     ptimestamp_id = self.ptimestamp.id, 
+#					     pdoctor_id = doctor.doctors_id)
 
-	def update(**kwargs):
-		availabilities.objects.create(day = self.day,
-						pjob_id = self.pjob.id,
-						ptimestamp_id = self.ptimestamp.id,
-						pdoctor_id = self.doctors.id)
-		super(planning, self).update(**kwargs)
-		availabilities.objects.get(day = self.day,
-						pjob_id = self.pjob.id,
-						ptimestamp_id = self.ptimestamp.id,
-						pdoctor_id = self.doctors.id).delete()
+#	def delete(self, *args, **kwargs):
+#		super(planning, self).delete(*args, **kwargs)
+#		availabilities.objects.create(day = self.day,
+#						pjob_id = self.pjob.id,
+#						ptimestamp_id = self.ptimestamp.id,
+#						pdoctor_id = self.doctors.id)
+
+#	def update(**kwargs):
+#		availabilities.objects.create(day = self.day,
+#						pjob_id = self.pjob.id,
+#						ptimestamp_id = self.ptimestamp.id,
+#						pdoctor_id = self.doctors.id)
+#		super(planning, self).update(**kwargs)
+#		availabilities.objects.get(day = self.day,
+#						pjob_id = self.pjob.id,
+#						ptimestamp_id = self.ptimestamp.id,
+#						pdoctor_id = self.doctors.id).delete()
 
 class planning_histo(models.Model):
 	day = models.DateField(auto_now=False, auto_now_add=False)

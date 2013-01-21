@@ -10,7 +10,8 @@
 	<li> {{ planning.planning_to_swap_with.day }}</li>
 	<li> {{ planning.planning_to_swap_with.ptimestamp.description }}</li>
 	<li> {{ planning.planning_to_swap_with.pjob.name }}</li>
-	<li><a href="{% url planning.views.swap_request_accept planning.id %}">Accepter</a></li>
+	<li><a href="{% url planning.views.accept_swap planning.id %}">Accepter</a></li>
+	<li><a href="{% url planning.views.cancel_swap planning.id %}">Refuser</a></li>
 	{% endfor %}
 </ul>
 {% endblock %}

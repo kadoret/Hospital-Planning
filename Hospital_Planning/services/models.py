@@ -32,7 +32,7 @@ class jobs(models.Model):
 	name = models.CharField(max_length = 50)
 	serial =  models.CharField(max_length = 15, unique=True)
 	day = models.ManyToManyField(days)
-	linked_to = models.ManyToManyField('self')
+	linked_to = models.ManyToManyField('self', blank=True)
 	
 	def __unicode__(self):
 		return self.name
