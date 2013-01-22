@@ -128,20 +128,20 @@ class UserSwap(object):
 		except:
 			return self
 
-def setPlanningSwap(list_swap, subject, text, current_user, planning_id):
+def setPlanningSwap(list_swap, current_user, planning_id):
 	""" Flag all the planning to be swap """  
 	for planning_id_swap  in list_swap:
-		user_swap = planning.objects.get(id = planning_id_swap).id
+		user_swap = planning.objects.get(id = planning_id_swap)
 		planning_swap.objects.create(planning_to_swap = planning.objects.get(id = planning_id ),
 						doctor_to_swap = doctors.objects.get(id = current_user ),
 						planning_to_swap_with = planning.objects.get(id =planning_id_swap),
-						doctor_to_swap_with = doctors.objects.get(id = user_swap),
+						doctor_to_swap_with = user_swap.pdoctor,
 						date = datetime.date.today())
-		mail.objects.create(cuser = doctors.objects.get(id = user_swap),
-				 subject = subject,
-				 text = text,
-				 mfrom = mail_adress.objects.get(
-						muser = doctors.objects.get(id = current_user )))
+#		mail.objects.create(cuser =  user_swap.pdoctor,
+#				 subject = "Demande d'echange de garde",
+#				 text = "Puis je echanger ma garde",
+#				 mfrom = mail_adress.objects.get(
+#						muser = doctors.objects.get(id = current_user )))
 
 def getUserSwapForPlanningSwap(current_user, planning_id):
 	""" Return list of UserSwap for a specific planning swap """

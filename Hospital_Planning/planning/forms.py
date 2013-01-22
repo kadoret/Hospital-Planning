@@ -21,8 +21,6 @@ class PlanningSwapForm(forms.Form):
 	class PlanningSwapForm 
 		Form for swapping a planning
 	"""
-	subject = forms.CharField( max_length = 20 )
-	message = forms.CharField(widget=forms.Textarea)
 	# Dynamic change of choice, use a function instead of static list 
 	planning_swap = forms.MultipleChoiceField(choices = [], widget=forms.CheckboxSelectMultiple)
 	def __init__(self, *args, **kwargs):
@@ -36,7 +34,5 @@ class PlanningSwapForm(forms.Form):
 	def save(self, *args, **kwargs):
 		""" override save method """
 		setPlanningSwap(list_swap = self.cleaned_data['planning_swap'],
-				subject = self.cleaned_data['subject'],
-				text = self.cleaned_data['message'],
 				planning_id = kwargs['planning_id'],
 				current_user = kwargs['doctor_id'])
