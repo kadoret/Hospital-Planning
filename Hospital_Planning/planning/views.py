@@ -17,7 +17,6 @@ class calendar:
 def reserved_day_add(request, year, month, day):
 	aDay = datetime.date(int(year),int(month),int(day))
 	reserved_days.objects.create(day = aDay, pdoctor_id = request.user.id)
-	print request
 	return HttpResponseRedirect(request.REQUEST.get('next', '/planning/calendar_view'))
 
 @login_required
@@ -37,6 +36,8 @@ def calendar_view(request):
 	while day_begin < day_end:
 		aPlanning = planning.objects.filter(pdoctor = request.user, day = day_begin)
 		aReserved = reserved_days.objects.filter(pdoctor = request.user, day = day_begin)
+		if aPlanning and aReserved:
+			aReserved.delete()
 		if not aPlanning and not aReserved:
 			calendar_list.append(calendar(day_begin, 0))
 		elif aReserved:
@@ -62,11 +63,17 @@ def import_planning(request):
 	if request.method == 'POST':
 		form = PlanningImportForm(request.POST, request.FILES)
 		if form.is_valid():
-			form.save(file = request.FILES['file'])
-			return HttpResponseRedirect('/planning/my_planning_view/0')
+			(status, failed, updated, created ) = form.save(file = request.FILES['file'])
+			message = "created : " + str(created) + ", failed: " + str(failed) + ", updated : " +  str(updated)
+			new_form = PlanningImportForm()
+			print message
+			return render(request,'planning/import.html', {'form': new_form,
+										'redirect' : True, 
+										'status': status,
+										'message': message})
 	else:
 		form = PlanningImportForm()
-		return render(request, 'planning/import.html', {'form': form})
+		return render(request, 'planning/import.html', {'form': form, 'redirect' : False})
 
 @login_required
 def my_planning_view(request, old = '0'):
@@ -75,12 +82,30 @@ def my_planning_view(request, old = '0'):
 						pdoctor = request.user,
 						day__range = [ datetime.date.today(),
 								datetime.date.today() + timedelta( days = 360 ) ])
-		return render(request, 'planning/planning_view.html', {'current_planning': aPlanningList, 'old': False})
+		
+		paginator = Paginator(aPlanningList, 15)
+		page = request.GET.get('page')
+		try:
+			planning_page = paginator.page(page)
+		except PageNotAnInteger:
+			planning_page = paginator.page(1)
+		except EmptyPage:
+			planning_page = paginator.page(paginator.num_pages)
+		return render(request, 'planning/planning_view.html', {'current_planning': planning_page, 'old': False})
+
 	else:
 		aPlanningList = planning.objects.filter(pdoctor = request.user
 							).exclude( day__range = [ datetime.date.today(),
 										  datetime.date.today() + timedelta( days = 360 )])
-	return render (request, 'planning/planning_view.html', {'current_planning': aPlanningList, 'old': True})
+	paginator = Paginator(aPlanningList, 15)
+	page = request.GET.get('page')
+	try:
+		planning_page = paginator.page(page)
+	except PageNotAnInteger:
+		planning_page = paginator.page(1)
+	except EmptyPage:
+		planning_page = paginator.page(paginator.num_pages)
+	return render (request, 'planning/planning_view.html', {'current_planning': planning_page, 'old': True})
 
 @login_required
 def auto_swap(request, planning_id):

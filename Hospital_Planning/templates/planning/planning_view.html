@@ -1,16 +1,17 @@
 {% extends "base/base.html" %}
 {% block content %}
-{% if old %}
-	<h3>Mes gardes effectuées </h3>
-{% else %}
-	<h3>Mes gardes à venir </h3>
-{% endif %}
 <table class="table table-hover table-condensed">
+{% if old %}
+	<caption>Mes gardes effectuées<caption>
+{% else %}
+	<caption>Mes gardes plannifiées<caption>
+{% endif %}
+
 <thead>
 	<tr>
-		<th> Date </th>
-		<th> Horaire </th>
-		<th> Service/poste </th>
+		<th>  </th>
+		<th>  </th>
+		<th>  </th>
 		{% if old %} {% else %}
 			<th> </th>
 		{% endif %}
@@ -18,7 +19,7 @@
 	 <tbody>
 	{% for planning in current_planning %}
 	<tr>
-		<td>{{ planning.day }}</td>
+		<td>{{ planning.day|date:'d/m/Y' }}</td>
 		<td> {{ planning.ptimestamp.description }}</td>
 		<td> {{ planning.pjob.name }}</td>
 		<td> 
@@ -40,4 +41,20 @@
 	</tbody>
 </thead>
 </table>
+ <ul class="pager">
+         {% if current_planning.has_previous %}
+         <li>
+             <a href="?page={{ current_planning.previous_page_number }}">Précédent</a>
+         </li>
+         {% endif %}
+         <li>
+             Page {{ current_planning.number }} sur {{ current_planning.paginator.num_pages }}.
+         </li>
+         {% if current_planning.has_next %}
+         <li>
+             <a href="?page={{ current_planning.next_page_number }}">Suivant</a>
+         </li>
+         {% endif %}
+</ul>
+
 {% endblock %}

@@ -1,5 +1,5 @@
 from django.db import models
-from services.models import doctors_jobs, jobs
+from services.models import jobs
 # Create your models here.
 
 		

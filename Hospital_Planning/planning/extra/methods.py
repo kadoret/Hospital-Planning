@@ -1,4 +1,4 @@
-from services.models import doctors_jobs, doctors, timestamps, jobs
+from services.models import doctors, timestamps, jobs
 from planning.models import planning, planning_swap
 from mail.models import mail_adress, mail
 from django import forms
@@ -12,10 +12,14 @@ from django.db import IntegrityError
 def handle_uploaded_planning(f):
 	""" will import the planning from csv to the database """
 	try:
+		status = True
 		data_rows = csv.reader(f, delimiter=';',  quoting=csv.QUOTE_NONE)
 		cpt_header = True
 		mapping = {}
 		date_match = re.compile(r"[0-9]{2}/[0-9]{2}/[0-9]{4}")
+		created = 0
+		updated = 0
+		failed = 0
 		for row in data_rows:
 			cpt = 0
 			date_planning = None
@@ -48,21 +52,29 @@ def handle_uploaded_planning(f):
 									pdoctor = doctors.objects.get(username__iexact = aDoctor),
 									pjob = mapping[str(cpt)][0] ,
 									ptimestamp = mapping[str(cpt)][1] )
+							created = created + 1
 				
 						elif  date_match.match(aDoctor) is not None:
 							date_planning = aDoctor								
 
 					except ObjectDoesNotExist, e:
-						pass
-					#	return False
+						failed = failed + 1
+						status = False
+						print aDoctor
+					
 					except IntegrityError, e:
-						pass
-						# Duplicate case
-					#	return False
+						new_planning =	planning.objects.get(day = datetime.datetime.strptime(date_planning, '%d/%m/%Y'),
+									pjob = mapping[str(cpt)][0] ,
+									ptimestamp = mapping[str(cpt)][1])
+						if doctors.objects.get(username__iexact = aDoctor) != new_planning.pdoctor:	
+							new_planning.pdoctor =  doctors.objects.get(username__iexact = aDoctor)
+							new_planning.save()
+							updated = updated + 1
+					
 					cpt = cpt + 1
-		return True		
+		return (status, failed,updated,created)
 	except ObjectDoesNotExist, e:
-		return False
+		return (False, failed, updated, created)
 
 class planning_populate(object):
 
@@ -93,6 +105,8 @@ class UserSwap(object):
  	def __init__(self, doctor_model):
 		for i in vars(doctor_model).keys():
 			setattr(self, i, vars(doctor_model)[i])
+
+		self.planning_swap = 0
  
 	def __str__(self):
 		return ' '.join([self.username,
@@ -123,7 +137,7 @@ class UserSwap(object):
 			self.planning_swap  = int(planning.objects.get( pdoctor = self.id,
 									 pjob = service_id,
 									 ptimestamp = timestamp,
-									 day =day).id)
+									 day = day).id)
 			return self
 		except:
 			return self
@@ -154,11 +168,14 @@ def getUserSwapForPlanningSwap(current_user, planning_id):
 	except:
 		return [] 
 	# users  of the  current service
-	users_same_job = doctors_jobs.objects.filter( jobs = planning_swap.pjob_id
-								).exclude(doctors = planning_swap.pdoctor_id
-								).values_list('doctors',flat=True)
+	users_same_job = doctors.objects.filter(djobs = planning_swap.pjob
+					).exclude(id = planning_swap.pdoctor_id
+					).values_list('id',flat=True)
+	#users_same_job = doctors_jobs.objects.filter( jobs = planning_swap.pjob_id
+	#							).exclude(doctors = planning_swap.pdoctor_id
+	#							).values_list('doctors',flat=True)
 	# check user works
-	users_working = planning.objects.filter( pjob = planning_swap.pjob_id, 
+	users_working = planning.objects.filter( #pjob = planning_swap.pjob_id, 
 						 day = planning_swap.day, 
 						 ptimestamp = planning_swap.ptimestamp_id 
 							).exclude(pdoctor = planning_swap.pdoctor_id
@@ -194,8 +211,10 @@ def getUserSwapForPlanningSwap(current_user, planning_id):
 	for anElegibleUser in elegible_users:
 		elegible_users_date_swap[ str(anElegibleUser) ] =  [ (item1, int(item2))  
 									for item1,item2,item3 in 
-										planning.objects.filter( pdoctor = anElegibleUser 	
-													).values_list('day','ptimestamp','pjob')
+										planning.objects.filter( pdoctor = anElegibleUser,
+														day__range= [ datetime.date.today(),
+															datetime.date.today() + timedelta( days = 360 ) ] 	
+													).values_list('day','ptimestamp','pjob') 
 										if int(item3) in jobs_linked_list ]
 	# we perfome set diff between the user as refrence and the other users
 	final = []
@@ -204,7 +223,7 @@ def getUserSwapForPlanningSwap(current_user, planning_id):
 #		for aSwapInfo in set(current_user_date_swap).intersection( set( elegible_users_date_swap[user_id] ) ):
 			#tricky it's the garanty for having 2 job complient 
 			if planning.objects.filter(pdoctor_id = user_id, day = aSwapInfo[0], ptimestamp_id = aSwapInfo[1]
-							).values_list('pjob_id', flat=True)[0] in jobs_linked_list: 
+							).values_list('pjob_id', flat=True)[0] in jobs_linked_list:
 				final.append( 
 					UserSwap( 
 						doctors.objects.get(id = long(user_id))

@@ -13,7 +13,7 @@ class PlanningImportForm(forms.Form):
 	#TODO ovveride is_valid()
 
 	def save(*args, **kwargs):
-		handle_uploaded_planning(kwargs['file'])
+		return handle_uploaded_planning(kwargs['file'])
 		
 
 class PlanningSwapForm(forms.Form):

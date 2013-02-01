@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth import login, authenticate
-from services.models import doctors
-from django.contrib.auth.forms import AuthenticationForm
+from services.models import doctors, jobs
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
 
 class LoginForm(AuthenticationForm):
@@ -16,3 +16,10 @@ class LoginForm(AuthenticationForm):
  				login(request, user)
 				return True
 		return False
+
+class doctorForm(UserCreationForm):
+	username = forms.RegexField(label=("Username"), max_length=30, regex=r'^[ \t\r\n\f\w.@+*-]+$',
+	help_text = ("Required. 30 characters or fewer. Letters, digits and @/./+/-/_ only."),
+	error_messages = {'invalid': ("This value may contain only letters, numbers and @/./+/-/_ characters.")})
+	class Meta:
+		model = doctors

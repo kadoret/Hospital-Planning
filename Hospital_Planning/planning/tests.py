@@ -12,7 +12,7 @@ from planning.forms import PlanningSwapForm
 from planning.extra.methods import UserSwap, getUserSwapForPlanningSwap, handle_uploaded_planning
 from planning.models import planning, planning_swap
 from mail.models import mail_adress, mail
-from services.models import doctors, days, jobs, timestamps, doctors_jobs
+from services.models import doctors, days, jobs, timestamps#, doctors_jobs
 import datetime, os, csv
 from datetime import timedelta
 
@@ -51,11 +51,15 @@ def init_db_test():
 	mail_adress.objects.create(muser = dummy2, email_intern="toto2@kdo.com" )
 	mail_adress.objects.create(muser = dummy3, email_intern="toto3@kdo.com" )
 
-	doctors_jobs.objects.create(doctors=dummy1,jobs=aDummyService, status = 1)
-	doctors_jobs.objects.create(doctors=dummy2,jobs=aDummyService, status = 1)
-	doctors_jobs.objects.create(doctors=dummy2,jobs=aDummyService2, status = 1)
-	doctors_jobs.objects.create(doctors=dummy3,jobs=aDummyService, status = 1)
-	doctors_jobs.objects.create(doctors=dummy4,jobs=aDummyService, status = 0)
+	dummy1.djobs.add(aDummyService)
+	dummy2.djobs.add(aDummyService,aDummyService2)
+	dummy3.djobs.add(aDummyService)
+	dummy4.djobs.add(aDummyService)
+	#doctors_jobs.objects.create(doctors=dummy1,jobs=aDummyService, status = 1)
+	#doctors_jobs.objects.create(doctors=dummy2,jobs=aDummyService, status = 1)
+	#doctors_jobs.objects.create(doctors=dummy2,jobs=aDummyService2, status = 1)
+	#doctors_jobs.objects.create(doctors=dummy3,jobs=aDummyService, status = 1)
+	#doctors_jobs.objects.create(doctors=dummy4,jobs=aDummyService, status = 0)
 
 
 class planningImportTest(TestCase):
