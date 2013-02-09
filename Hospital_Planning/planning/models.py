@@ -1,8 +1,9 @@
 from django.db import models
+from django.core.exceptions import ObjectDoesNotExist
 from services.models import jobs
 # Create your models here.
-
-		
+from datetime import datetime
+import datetime		
 
 class reserved_days(models.Model):
 	class Meta:
@@ -18,6 +19,7 @@ class planning(models.Model):
 	
 	day = models.DateField(auto_now=False, auto_now_add=False)
 	official_approved =  models.BooleanField(default = True)
+	request_swap = models.BooleanField(default = False) 
 	
 	pjob = models.ForeignKey('services.jobs')
 	pdoctor = models.ForeignKey('services.doctors')
@@ -25,38 +27,26 @@ class planning(models.Model):
 	
 	request_swap_to = models.ManyToManyField('self', through='planning_swap', symmetrical=False)
 
-#	def save(self, *args, **kwargs):
-#		super(planning, self).save(*args, **kwargs)
-		# like a proc on database
-#		other_doctor_list = doctors_jobs.objects.exclude(
-#								doctors_id = self.pdoctor.id).filter(
-#									jobs_id = self.pjob.id)
+	def save(self, *args, **kwargs):
+		super(planning, self).save(*args, **kwargs)
+		try:
+			aPlanning_hist = planning_hist.objects.get(pplanning = self.id, current_version = True)
+			if aPlanning_hist.pdoctor != self.pdoctor:
+				aPlanning_hist.current_version = False
+				aPlanning_hist.save()
+				planning_hist.objects.create(pplanning = self.id, 
+								ptimestamp = self.ptimestamp,
+								pdoctor = self.pdoctor,
+								pjob = self.pjob,
+								current_version = True,
+								version = int(aPlanning_hist.version) + 1,
+								day = datetime.date.today())
+		except ObjectDoesNotExist, e:
+			#First creation
+			pass
+			
 
-#		for doctor in other_doctor_list:
-#			availabilities.objects.create(day = self.day,
-#					     pjob_id = self.pjob.id,
-#					     ptimestamp_id = self.ptimestamp.id, 
-#					     pdoctor_id = doctor.doctors_id)
-
-#	def delete(self, *args, **kwargs):
-#		super(planning, self).delete(*args, **kwargs)
-#		availabilities.objects.create(day = self.day,
-#						pjob_id = self.pjob.id,
-#						ptimestamp_id = self.ptimestamp.id,
-#						pdoctor_id = self.doctors.id)
-
-#	def update(**kwargs):
-#		availabilities.objects.create(day = self.day,
-#						pjob_id = self.pjob.id,
-#						ptimestamp_id = self.ptimestamp.id,
-#						pdoctor_id = self.doctors.id)
-#		super(planning, self).update(**kwargs)
-#		availabilities.objects.get(day = self.day,
-#						pjob_id = self.pjob.id,
-#						ptimestamp_id = self.ptimestamp.id,
-#						pdoctor_id = self.doctors.id).delete()
-
-class planning_histo(models.Model):
+class planning_hist(models.Model):
 	day = models.DateField(auto_now=False, auto_now_add=False)
 	version = models.IntegerField()
 	current_version = models.BooleanField(default = True)	
@@ -73,3 +63,4 @@ class planning_swap(models.Model):
 	planning_to_swap_with = models.ForeignKey(planning, related_name='planning_to_swap_with_set')
 	doctor_to_swap_with = models.ForeignKey('services.doctors', related_name='doctor_to_swap_with_set')
 	date = models.DateField(auto_now=False, auto_now_add=False)
+	accepted =  models.BooleanField(default = False)

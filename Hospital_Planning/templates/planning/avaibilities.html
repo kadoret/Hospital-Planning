@@ -2,7 +2,7 @@
 {% block content %}
 {% include "base/status.html" %}
 <table class="table table-striped table-condensed">
-<caption> Mes contraintes à venir<caption>
+<caption> Mon calendrier<caption>
 <thead>
 <tr>
                 <th>  </th>
@@ -11,10 +11,10 @@
 </tr>
 <tbody>
 {% for calendar in calendar_list %}
+<tr>
 {% if  calendar.description  == 2 %}
-	<tr class="warning">
-	<td> {{ calendar.day|date:'d/m/Y' }}</td>
-	<td> Journée non échangeable</td>
+	<td> <i class="icon-calendar"></i> {{ calendar.day|date:'d/m/Y' }}</td>
+	<td> <i class="icon-ban-circle"></i> Journée non échangeable</td>
 	<td>
  	<div class="btn-group">
 		 <a class="btn dropdown-toggle btn-primary btn-small" data-toggle="dropdown" href="#">
@@ -22,20 +22,18 @@
 		<span class="caret"></span>
 		</a>
 			<ul class="dropdown-menu">
-			<li><a href="{% url planning.views.reserved_day_remove calendar.day|date:'Y' calendar.day|date:'m' calendar.day|date:'d'%}">Rendre échangeable</a></li>
+			<li><a href="{% url planning.views.reserved_day_remove calendar.day|date:'Y' calendar.day|date:'m' calendar.day|date:'d'%}/?page={{ calendar_list.number }}">Rendre échangeable</a></li>
 			</ul>
 	 </div>
 	</td>
 
 {% elif  calendar.description  == 1 %}
-	<tr class="error">
-	<td> {{ calendar.day|date:'d/m/Y' }}</td>
-	<td> Garde plannifiée</td>
+	<td> <i class="icon-calendar"></i> {{ calendar.day|date:'d/m/Y' }}</td>
+	<td> <i class="icon-briefcase"></i> Garde plannifiée</td>
 	<td></td>
 {% else %}
-	<tr class="info">
-	<td> {{ calendar.day|date:'d/m/Y' }}</td>
-	<td> Journée échangeable</td>
+	<td> <i class="icon-calendar"></i> {{ calendar.day|date:'d/m/Y' }}</td>
+	<td><i class="icon-resize-horizontal"></i> Journée échangeable</td>
 	<td>
 	<div class="btn-group">
 		<a class="btn dropdown-toggle btn-primary btn-small" data-toggle="dropdown" href="#">
@@ -43,7 +41,7 @@
 		<span class="caret"></span>
 		</a>
 			<ul class="dropdown-menu">
-			<li><a href="{% url planning.views.reserved_day_add calendar.day|date:'Y' calendar.day|date:'m' calendar.day|date:'d'%}">Rendre non échangeable</a></li>
+			<li><a href="{% url planning.views.reserved_day_add calendar.day|date:'Y' calendar.day|date:'m' calendar.day|date:'d'%}/?page={{ calendar_list.number }}">Rendre non échangeable</a></li>
 			</ul>
 	 </div>
 	</td>
@@ -60,7 +58,7 @@
         </li>
 	{% endif %}
 	<li>
-            Page {{ calendar_list.number }} sur {{ calendar_list.paginator.num_pages }}.
+            Page {{ calendar_list.number }} sur {{ calendar_list.paginator.num_pages }}
 	</li>
         {% if calendar_list.has_next %}
 	<li>

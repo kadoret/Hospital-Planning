@@ -22,7 +22,8 @@ class PlanningSwapForm(forms.Form):
 		Form for swapping a planning
 	"""
 	# Dynamic change of choice, use a function instead of static list 
-	planning_swap = forms.MultipleChoiceField(choices = [], widget=forms.CheckboxSelectMultiple)
+	#planning_swap = forms.MultipleChoiceField(choices = [], widget=forms.CheckboxSelectMultiple)
+	planning_swap = forms.MultipleChoiceField(choices = [], widget=forms.SelectMultiple(attrs={'class':'input-xxlarge', 'size':'30'}))
 	def __init__(self, *args, **kwargs):
 		""" override init method to get users to swap """
 		doctor_id = kwargs.pop('doctor_id')

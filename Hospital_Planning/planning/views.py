@@ -16,15 +16,17 @@ class calendar:
 @login_required
 def reserved_day_add(request, year, month, day):
 	aDay = datetime.date(int(year),int(month),int(day))
+	page = request.GET.get('page')
 	reserved_days.objects.create(day = aDay, pdoctor_id = request.user.id)
-	return HttpResponseRedirect(request.REQUEST.get('next', '/planning/calendar_view'))
+	return HttpResponseRedirect('/planning/calendar_view?page='+ str(page))
 
 @login_required
 def reserved_day_remove(request, year, month, day):
 	aDay = datetime.date(int(year),int(month),int(day))
+	page = request.GET.get('page')
 	object_to_remove = reserved_days.objects.get(day = aDay, pdoctor_id = request.user.id)
 	object_to_remove.delete()
-	return HttpResponseRedirect(request.REQUEST.get('next', '/planning/calendar_view'))
+	return HttpResponseRedirect('/planning/calendar_view?page='+ str(page))
 
 @login_required
 def calendar_view(request):
@@ -48,6 +50,7 @@ def calendar_view(request):
 				
 	paginator = Paginator(calendar_list, 15)
 	page = request.GET.get('page')
+	print page
 	try:
 		my_calandar_page = paginator.page(page)
 	except PageNotAnInteger:
@@ -124,18 +127,22 @@ def swap_request_display(request):
 	aPlanningList = planning_swap.objects.filter( doctor_to_swap_with_id = request.user,
 							date__range = [ datetime.date.today(),
 									 datetime.date.today() + timedelta( days = 360 )])
-	return render(request, 'planning/swap_request_display.html', {'planning_list': aPlanningList})
+	return render(request, 'planning/swap_request_display.html', {'planning_list': aPlanningList, 'my' : False})
 
 @login_required
 def my_swap_request_display(request):
 	aPlanningList = planning_swap.objects.filter( doctor_to_swap_id = request.user,
 							date__range = [ datetime.date.today(),
 									datetime.date.today() + timedelta( days = 360 )])
-	return render(request, 'planning/swap_request_display.html', {'planning_list': aPlanningList})
+	return render(request, 'planning/swap_request_display.html', {'planning_list': aPlanningList, 'my' : True})
 
 @login_required
 def cancel_swap(request, swap_id):
 	aSwap = planning_swap.objects.get(id = swap_id)
+	if not planning_swap.objects.filter(date = aSwap.date, doctor_to_swap_id = aSwap.doctor_to_swap.id, accepted = False ).exclude(id = swap_id):
+		aSwap.planning_to_swap.official_approved = True
+		aSwap.planning_to_swap.request_swap = False
+		aSwap.planning_to_swap.save()
 	aSwap.delete()
 	return HttpResponseRedirect('/planning/my_swap_request_display')
 
@@ -143,13 +150,23 @@ def cancel_swap(request, swap_id):
 def accept_swap(request, swap_id):
 	aSwap = planning_swap.objects.get(id = swap_id)
 	# remove if exist other swap request
-	other_swap = planning_swap.objects.filter(date = aSwap.date, doctor_to_swap_id = aSwap.doctor_to_swap.id )
+	other_swap = planning_swap.objects.filter(date = aSwap.date, doctor_to_swap_id = aSwap.doctor_to_swap.id, accepted = False ).exclude(id = swap_id)
 	for swap in other_swap:
 		swap.delete()
-	# update calandar
-	planning.objects.filter(id = aSwap.doctor_to_swap.id).update(pdoctor =aSwap.doctor_to_swap_with)
-	planning.objects.filter(id = aSwap.doctor_to_swap_with.id).update(pdoctor =aSwap.doctor_to_swap)
-	aSwap.delete()
+	# update planning
+	user1_planning = planning.objects.get(id = aSwap.planning_to_swap.id)
+	user1_planning.request_swap = False
+	user1_planning.official_approved = False
+	user1_planning.save()
+	
+	user2_planning = planning.objects.get(id = aSwap.planning_to_swap_with.id)
+	user2_planning.request_swap = False
+	user2_planning.official_approved = False
+	user2_planning.save()
+	
+	aSwap.accepted = True
+	aSwap.save()
+	
 	return HttpResponseRedirect('/planning/swap_request_display')
 
 @login_required
