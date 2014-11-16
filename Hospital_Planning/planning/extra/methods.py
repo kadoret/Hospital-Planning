@@ -1,6 +1,5 @@
 from services.models import doctors, timestamps, jobs
 from planning.models import planning, planning_swap, reserved_days
-from mail.models import mail_adress, mail
 from django import forms
 import datetime
 from datetime import timedelta
@@ -10,7 +9,7 @@ from django.db import IntegrityError
 
 #TODO Handle re-entrance
 def handle_uploaded_planning(f):
-	""" will import the planning from csv to the database """
+	""" will import the planning from CSV to the database """
 	try:
 		status = True
 		data_rows = csv.reader(f, delimiter=';',  quoting=csv.QUOTE_NONE)
@@ -46,7 +45,7 @@ def handle_uploaded_planning(f):
 					aDoctor = aDoctor.strip('"')
 					aDoctor = aDoctor.strip('\'')
 					try:
-						# No data some time it's happena
+						# No data some time it's happen
 						if aDoctor != '' and date_planning is not None:
 							planning.objects.create(day = datetime.datetime.strptime(date_planning, '%d/%m/%Y'),
 									pdoctor = doctors.objects.get(username__iexact = aDoctor),
@@ -112,7 +111,7 @@ class UserSwap(object):
 	def __str__(self):
 		return ' '.join([str(self.date),
 				 '(',    self.description, 
-				 ') |-----|', str(self.service_desc), '|-----|', self.username])
+				 ') -----', str(self.service_desc), '-----', self.username])
 
 	def __unicode__(self):
 		return ' '.join([ self.username, '|-----|',str(self.date),
@@ -205,11 +204,11 @@ def getUserSwapForPlanningSwap(current_user, planning_id):
 													 official_approved = True
 														).values_list('day','ptimestamp','pjob') 
 										if int(item3) in jobs_linked_list ]
-	# we perfome set diff between the user as refrence and the other users
+	# we set diff between the user as reference and the other users
 	final = []
 	for user_id in elegible_users_date_swap.keys():
 		for aSwapInfo in set(elegible_users_date_swap[user_id]).difference( set( current_user_none_date_swap ) ):
-			# tricky it's the garanty for having 2 job complient 
+			# tricky it's the garanty for having 2 job complaient 
 			if planning.objects.filter(pdoctor_id = user_id, 
 							day = aSwapInfo[0], 
 							ptimestamp_id = aSwapInfo[1]

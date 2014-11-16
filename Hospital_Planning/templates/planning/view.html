@@ -1,0 +1,48 @@
+{% extends "base/base.html" %}
+{% block content %}
+<table class="table table-hover table-condensed">
+
+<thead>
+	<tr>
+		<th>  </th>
+		<th>  </th>
+			<th> </th>
+	</tr>
+	 <tbody>
+	{% for planning in planning_list %}
+	<tr>
+		<td><i class="icon-calendar"></i> {{ planning.day|date:'d/m/Y' }} ({{ planning.ptimestamp.description }}) <i class="icon-arrow-right"></i> {{ planning.pjob.name }}</td>
+	<td><i class="icon-user"></i>{{ planning.pdoctor.username}}</td>
+		<td> 
+			    <div class="btn-group">
+    				<a class="btn dropdown-toggle btn-primary btn-small" data-toggle="dropdown" href="#">
+					Action
+					<span class="caret"></span>
+    				</a>
+    				<ul class="dropdown-menu">
+    					<li><a href="{% url planning.views.delete planning.id %}">Supprimer</a></li>
+    				</ul>
+    			</div>
+		</td>
+	</tr>
+	{% endfor %}
+	</tbody>
+</thead>
+</table>
+ <ul class="pager">
+         {% if planning_list.has_previous %}
+         <li>
+             <a href="?page={{ planning_list.previous_page_number }}">Précédent</a>
+         </li>
+         {% endif %}
+         <li>
+             Page {{ planning_list.number }} sur {{ planning_list.paginator.num_pages }}
+         </li>
+         {% if planning_list.has_next %}
+         <li>
+             <a href="?page={{ planning_list.next_page_number }}">Suivant</a>
+         </li>
+         {% endif %}
+</ul>
+
+{% endblock %}

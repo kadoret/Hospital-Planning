@@ -10,7 +10,6 @@ class DoctorAdmin(admin.ModelAdmin):
 
 #admin.site.unregister(User)
 admin.site.unregister(Site)
-
 admin.site.register(jobs)
 admin.site.register(days)
 admin.site.register(doctors, DoctorAdmin)

@@ -17,7 +17,7 @@ class planning(models.Model):
 	class Meta:
 		unique_together=('ptimestamp','pjob','day')
 	
-	day = models.DateField(auto_now=False, auto_now_add=False)
+	day = models.DateField(auto_now=False, auto_now_add=False, help_text=' Utiliser le format dd/mm/yyyy')
 	official_approved =  models.BooleanField(default = True)
 	request_swap = models.BooleanField(default = False) 
 	
@@ -34,7 +34,7 @@ class planning(models.Model):
 			if aPlanning_hist.pdoctor != self.pdoctor:
 				aPlanning_hist.current_version = False
 				aPlanning_hist.save()
-				planning_hist.objects.create(pplanning = self.id, 
+				planning_hist.objects.create(pplanning_id = self.id, 
 								ptimestamp = self.ptimestamp,
 								pdoctor = self.pdoctor,
 								pjob = self.pjob,
@@ -42,8 +42,13 @@ class planning(models.Model):
 								version = int(aPlanning_hist.version) + 1,
 								day = datetime.date.today())
 		except ObjectDoesNotExist, e:
-			#First creation
-			pass
+			planning_hist.objects.create(pplanning_id = self.id,
+							ptimestamp = self.ptimestamp,
+							pdoctor = self.pdoctor,
+							pjob = self.pjob,
+							current_version = True,
+							version = 1,
+							day = datetime.date.today())
 			
 
 class planning_hist(models.Model):
@@ -64,3 +69,4 @@ class planning_swap(models.Model):
 	doctor_to_swap_with = models.ForeignKey('services.doctors', related_name='doctor_to_swap_with_set')
 	date = models.DateField(auto_now=False, auto_now_add=False)
 	accepted =  models.BooleanField(default = False)
+	validated = models.BooleanField(default = False)

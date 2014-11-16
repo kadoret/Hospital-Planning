@@ -9,7 +9,11 @@ class LoginForm(AuthenticationForm):
 	def is_valid(self, *args, **kwargs):
 		request = kwargs.pop('request')
 		super(LoginForm, self).is_valid(*args, **kwargs)
-		user = authenticate(username= self.request['username'], 
+		if 'old_password' in request.POST:
+			user = authenticate(username= request.user,
+						password=request.POST['old_password'] )
+		else:
+			user = authenticate(username= self.request['username'], 
 					password=self.request['password'] )
 		if user is not None:
  			if user.is_active:

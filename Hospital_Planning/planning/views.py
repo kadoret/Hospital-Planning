@@ -3,11 +3,12 @@ from django.shortcuts import render, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from planning.models import planning, planning_swap, reserved_days
-from planning.forms import PlanningSwapForm, PlanningImportForm
+from planning.forms import PlanningSwapForm, PlanningImportForm, PlanningForm
+from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime, timedelta
 import datetime
 
-
+""" Calendar class  """
 class calendar:
 	def __init__(self, day, description):
 		self.day = day
@@ -54,10 +55,10 @@ def calendar_view(request):
 	try:
 		my_calandar_page = paginator.page(page)
 	except PageNotAnInteger:
-        # If page is not an integer, deliver first page.
+		# If page is not an integer, deliver first page.
 		my_calandar_page = paginator.page(1)
 	except EmptyPage:
-        # If page is out of range (e.g. 9999), deliver last page of results.
+		# If page is out of range (e.g. 9999), deliver last page of results.
 		my_calandar_page = paginator.page(paginator.num_pages)
 	return render(request, 'planning/avaibilities.html', {'calendar_list': my_calandar_page}) 
 
@@ -150,7 +151,7 @@ def cancel_swap(request, swap_id):
 def accept_swap(request, swap_id):
 	aSwap = planning_swap.objects.get(id = swap_id)
 	# remove if exist other swap request
-	other_swap = planning_swap.objects.filter(date = aSwap.date, doctor_to_swap_id = aSwap.doctor_to_swap.id, accepted = False ).exclude(id = swap_id)
+	other_swap = planning_swap.objects.filter(doctor_to_swap = aSwap.doctor_to_swap, planning_to_swap = aSwap.planning_to_swap, accepted = False ).exclude(id = swap_id)
 	for swap in other_swap:
 		swap.delete()
 	# update planning
@@ -169,7 +170,66 @@ def accept_swap(request, swap_id):
 	
 	return HttpResponseRedirect('/planning/swap_request_display')
 
+
 @login_required
-#TODO
+def validate_swap_display(request):
+	swap_list =  planning_swap.objects.filter(accepted = True, validated = False)
+	paginator = Paginator(swap_list, 15)
+	page = request.GET.get('page')
+	try:
+		planning_page = paginator.page(page)
+	except PageNotAnInteger:
+		planning_page = paginator.page(1)
+	except EmptyPage:
+		planning_page = paginator.page(paginator.num_pages)		
+	return  render(request, 'planning/swap_validation_display.html', {'swap_list': swap_list})
+
+@login_required
+def validate_swap(request, swap_id):
+	try:
+		aSwap = planning_swap.objects.get(id = swap_id)
+		aSwap.planning_to_swap.pdoctor = aSwap.doctor_to_swap_with
+		aSwap.planning_to_swap.official_approved = True
+		aSwap.planning_to_swap_with.pdoctor = aSwap.doctor_to_swap
+		aSwap.planning_to_swap_with.official_approved = True
+		aSwap.planning_to_swap.save()
+		aSwap.planning_to_swap_with.save()
+		aSwap.validated = True
+		aSwap.save()
+		return HttpResponseRedirect('/planning/validate_swap_display')
+	except ObjectDoesNotExist, e:
+		return HttpResponseRedirect('/planning/validate_swap_display')
+
+@login_required
+def create(request):
+	if request.method == 'POST':
+		form = PlanningForm(request.POST)
+		if form.is_valid():
+			form.save()
+			return HttpResponseRedirect('/planning/view')
+	else:
+		form = PlanningForm()
+		return render(request, 'planning/create.html', {'form': form})
+
+@login_required
+def delete(request, planning_id):
+	aPlanning = planning.objects.get(id = planning_id)
+	aPlanning.delete()
+	return HttpResponseRedirect('/planning/view')
+
+@login_required
 def swap(request):
 	pass
+
+@login_required
+def view(request):
+	planning_list = planning.objects.all()
+	paginator = Paginator(planning_list, 15)
+	page = request.GET.get('page')
+	try:
+		planning_page = paginator.page(page)
+	except PageNotAnInteger:
+		planning_page = paginator.page(1)
+	except EmptyPage:
+		planning_page = paginator.page(paginator.num_pages)
+	return  render(request, 'planning/view.html', {'planning_list': planning_page})

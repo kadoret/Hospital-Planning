@@ -42,25 +42,12 @@ class jobs(models.Model):
 		verbose_name_plural = 'Postes de garde'
 
 class doctors(User):
-#	djob = models.ManyToManyField(jobs, through='doctors_jobs')
 	djobs = models.ManyToManyField(jobs)
 	objects = UserManager()
 
 	class Meta:
 		verbose_name = 'Docteur'
 		verbose_name_plural = 'Docteurs'
-
-#class doctors_jobs(models.Model):
-#	doctors = models.ForeignKey(doctors)
-#	jobs =  models.ForeignKey(jobs)
-#	status =  models.IntegerField()
-#
-#	def __unicode__(self):
-#		return self.doctors.username + ' ' + self.jobs.name
-
-#	class Meta:
-#		verbose_name = 'Assignation des gardes'
-#		verbose_name_plural = 'Assignation des gardes'
 
 class doctors_auth_backend(ModelBackend):
 	def authenticate(self, username=None, password=None):
