@@ -1,3 +1,8 @@
+'''
+Created on Nov 22, 2014
+
+@author: knguyen
+'''
 from services.models import doctors, timestamps, jobs
 from planning.models import planning, planning_swap, reserved_days
 from django import forms
@@ -6,6 +11,7 @@ from datetime import timedelta
 import csv, re
 from django.core.exceptions import ObjectDoesNotExist 
 from django.db import IntegrityError
+
 
 #TODO Handle re-entrance
 def handle_uploaded_planning(f):
@@ -56,11 +62,12 @@ def handle_uploaded_planning(f):
 						elif  date_match.match(aDoctor) is not None:
 							date_planning = aDoctor								
 
-					except ObjectDoesNotExist, e:
+					except ObjectDoesNotExist:
+						print "The requested object does not exist"
 						failed = failed + 1
 						status = False
 					
-					except IntegrityError, e:
+					except IntegrityError:
 						new_planning =	planning.objects.get(day = datetime.datetime.strptime(date_planning, '%d/%m/%Y'),
 									pjob = mapping[str(cpt)][0] ,
 									ptimestamp = mapping[str(cpt)][1])
@@ -73,9 +80,11 @@ def handle_uploaded_planning(f):
 					
 					cpt = cpt + 1
 		return (status, failed,updated,created)
-	except ObjectDoesNotExist, e:
+	except ObjectDoesNotExist:
+		print "The requested object does not exist"
 		return (False, failed, updated, created)
 
+#TODO
 class planning_populate(object):
 
 	def __init__(self, type_gen, jobs, day_range):
@@ -102,12 +111,11 @@ class planning_populate(object):
 
 class UserSwap(object):
 
- 	def __init__(self, doctor_model):
+	def __init__(self, doctor_model):
 		for i in vars(doctor_model).keys():
 			setattr(self, i, vars(doctor_model)[i])
-
 		self.planning_swap = 0
- 
+		
 	def __str__(self):
 		return ' '.join([str(self.date),
 				 '(',    self.description, 
@@ -174,7 +182,7 @@ def getUserSwapForPlanningSwap(current_user, planning_id):
 						 ptimestamp = planning_swap.ptimestamp_id 
 							).exclude(pdoctor = planning_swap.pdoctor_id
 									).values_list('pdoctor',flat=True)
-	# get all potentiel user who can swap their gard (and the days is not reserved
+	# get all potential user who can swap their gard (and the days is not reserved
 	elegible_users =  [int(item) 
 				for item in set(users_same_job).difference( set(users_working) )
 					if not reserved_days.objects.filter(day = planning_swap.day,
@@ -208,7 +216,7 @@ def getUserSwapForPlanningSwap(current_user, planning_id):
 	final = []
 	for user_id in elegible_users_date_swap.keys():
 		for aSwapInfo in set(elegible_users_date_swap[user_id]).difference( set( current_user_none_date_swap ) ):
-			# tricky it's the garanty for having 2 job complaient 
+			# tricky it's the garanty for having 2 job compliance 
 			if planning.objects.filter(pdoctor_id = user_id, 
 							day = aSwapInfo[0], 
 							ptimestamp_id = aSwapInfo[1]

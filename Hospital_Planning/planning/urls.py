@@ -5,8 +5,7 @@ from django.conf.urls import patterns, include, url
 # admin.autodiscover()
 
 urlpatterns = patterns('planning.views',
-	url(r'^$', 'my_planning_view'),
-	url(r'^my_planning_view/(\d+)/?$', 'my_planning_view'),
+	url(r'^$', 'calendar_view'),
 	url(r'^auto_swap_request/(\d+)/?$', 'auto_swap'),
 	url(r'^swap_request/(\d+)/?$', 'swap'),
 	url(r'^swap_request_display/?$', 'swap_request_display'),

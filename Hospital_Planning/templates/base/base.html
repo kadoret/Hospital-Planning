@@ -1,99 +1,84 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-   <title>{% block title %}Tableau de garde{% endblock %}</title>
-    <link href="{{ STATIC_URL }}css/bootstrap.css" rel="stylesheet" media="screen">
-<link href="{{ STATIC_URL }}css/bootstrap-responsive.css" rel="stylesheet">
-    <style type="text/css">
-      body {
-        padding-top: 60px;
-        padding-bottom: 40px;
-      }
-      .sidebar-nav {
-        padding: 9px 0;
-      } 
-    </style>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">   
+    <title>{% block title %}Tableau de garde{% endblock %}</title>
+    <link href="{{ STATIC_URL }}css/bootstrap.min.css" rel="stylesheet" >
+    <link href="{{ STATIC_URL }}css/mycustom.css" rel="stylesheet" >
+
 </head>
-
 <body>
-<div class="navbar navbar-inverse navbar-fixed-top">
-<div class="navbar-inner">
-<div class="container-fluid">
 {% block nav %}
-
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
-          </a>
-<a class="brand" href="#">Hospital planning</a>
-<div class="nav-collapse collapse">
-
-             <p class="navbar-text pull-right">
-<a href="/services/logout" class="navbar-link">Déconnexion</a>
-             </p>
-<ul class="nav">
-{% if perms.admin %}
-<li><a href="/admin">Administration</a></li>
-{% endif %}
-<li><a href="/blog/index">Accueil</a></li>
-<li class="dropdown">
-                 <a class="dropdown-toggle" id="planning" role="button" data-toggle="dropdown" href="#">Mon tableau de garde <b class="caret"></b></a>
-                 <ul id="menu_planning" class="dropdown-menu" role="menu" aria-labelledby="planning">
-                   <li><a tabindex="-1" href="/planning/my_planning_view/0/">Plannifiées </a></li>
-<li><a tabindex="-1" href="/planning/my_planning_view/1/">Déjà effectuées</a></li>
-<li><a tabindex="-1" href="/planning/calendar_view">Contraintes/Vacances/Gardes</a></li>
-<li class="divider"></li>
-<li><a tabindex="-1" href="/planning/swap_request_display">Sollicitations d'échange</a></li>
-<li><a tabindex="-1" href="/planning/my_swap_request_display">Mes demandes d'échange</a></li>
-{% if perms.planning.add_planning %}
-<li><a tabindex="-1" href="/planning/import_planning">Importer tableau de garde</a></li>
-{% endif %}
-                </ul>
-               </li>
-<li><a href="/mail/">Messages</a></li>
-<li><a href="/blog/about">About</a></li>
-</ul>
-</div>
+          </button>
+          <a class="navbar-brand" href="/planning/my_planning_view/0/">Hospital Planning</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                {% if perms.admin %}
+                    <li><a href="/admin">Administration</a></li>
+                {% endif %}
+                <li class="dropdown">
+                    <a class="dropdown-toggle" id="planning" role="button" data-toggle="dropdown" href="#">Mon tableau de garde <b class="caret"></b></a>
+                    <ul id="menu_planning" class="dropdown-menu" role="menu" aria-labelledby="planning">
+                        <li><a tabindex="-1" href="/planning/calendar_view">Mon planning d'activité</a></li>
+                        <li class="divider"></li>
+                        <li><a tabindex="-1" href="/planning/swap_request_display">Mes sollicitations d'échange</a></li>
+                        <li><a tabindex="-1" href="/planning/my_swap_request_display">Mes demandes d'échange</a></li>
+                        {% if perms.planning.add_planning %}
+                            <li><a tabindex="-1" href="/planning/import_planning">Importer tableau de garde</a></li>
+                            <li><a tabindex="-1" href="/planning/create">Créer une garde</a></li>
+                        {% endif %}
+                        </ul>
+                    </li>
+                    </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="/services/logout" class="navbar-link">Déconnexion</a></li>
+            </ul>
+        </div>
+      </div>
+    </nav>
 {% endblock %}
-</div>
-</div>
-</div>
+
+
 <div class="container-fluid">
-<div class="row-fluid">
-<div class="span2">
-{% block link %}
-           <div class="well sidebar-nav">
-             <ul class="nav nav-list">
-               <li class="nav-header">Sites webs Marseilles</li>
-               <li><a href="http://www.marseille.fr">Ville de Marseilles</a></li>
-               <li><a href="http://www.om.net">Olympique de Marseilles</a></li>
-               <li class="nav-header">Sites webs Medicaux</li>
-               <li><a href="http://www.fhf.fr/">Hopitaux de France</a></li>
-<li><a href="http://www.ap-hm.fr/samu13/fr/site/accueil.asp">Samu de Marseilles</a></li>
-<li class="nav-header">&copy; Kevin Nguyen</li>
-             </ul>
-           </div><!--/.well -->
-{% endblock %}
-         </div><!--/span-->
-<div class="span2">
-{% block left %}{% endblock %}
+    <div class="row">
+        <div class="col-sm-3 col-md-2 sidebar">
+        {% block link %}
+            <ul class="nav nav-sidebar">
+                <li class="active"><a href="#">Bienvenue {{ user.get_username }} <span class="sr-only">(current)</span></a></li>
+                <li><a href="http://www.marseille.fr">Ville de Marseilles</a></li>
+                <li><a href="http://www.om.net">Olympique de Marseilles</a></li>
+                <li><a href="http://www.fhf.fr/">Hopitaux de France</a></li>
+                <li><a href="http://www.ap-hm.fr/samu13/fr/site/accueil.asp">Samu de Marseilles</a></li>
+            </ul>
+         {% endblock %}
+        </div>
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+        {% block content %}{% endblock %}
+        </div>
+    </div>
 </div>
-<div class="span5">
-{% block content %}{% endblock %}
-</div>
-<div class="span2">
-{% block help %}{% endblock %}
-</div>
-</div>
-</div>
-<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap.js"></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="{{ STATIC_URL }}js/bootstrap.min.js"></script>
     <script type="text/javascript">
         $(document).ready(function () {
             $('.dropdown-toggle').dropdown();
         });
    </script>
- 
 </body>
 </html>
+

@@ -7,12 +7,9 @@ from planning.forms import PlanningSwapForm, PlanningImportForm, PlanningForm
 from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime, timedelta
 import datetime
+from  planning.extra.date_methods import isNewMonth, getFirstDayOfMonth, calendar
 
-""" Calendar class  """
-class calendar:
-	def __init__(self, day, description):
-		self.day = day
-		self.description = description	
+
 	
 @login_required
 def reserved_day_add(request, year, month, day):
@@ -31,27 +28,35 @@ def reserved_day_remove(request, year, month, day):
 
 @login_required
 def calendar_view(request):
-	#get working day
-	day_begin =  datetime.date.today()
-	day_end = datetime.date.today() + timedelta( days = 360 )
+	# Return the personal calendar of the user 
+	first = getFirstDayOfMonth(datetime.date.today())
+	end = datetime.date.today() + timedelta( days = 360 )
 	calendar_list = []
-
-	while day_begin < day_end:
-		aPlanning = planning.objects.filter(pdoctor = request.user, day = day_begin)
-		aReserved = reserved_days.objects.filter(pdoctor = request.user, day = day_begin)
+	calendar_month_list = []
+	while first < end:
+		if first < datetime.date.today():
+			passed_date = True
+		else:
+			passed_date = False
+		aPlanning = planning.objects.filter(pdoctor = request.user, day = first)
+		aReserved = reserved_days.objects.filter(pdoctor = request.user, day = first)
 		if aPlanning and aReserved:
 			aReserved.delete()
 		if not aPlanning and not aReserved:
-			calendar_list.append(calendar(day_begin, 0))
+			calendar_month_list.append(calendar(first,first.weekday(),0,passed_date,range(first.weekday())))
 		elif aReserved:
-			calendar_list.append(calendar(day_begin, 2))
+			calendar_month_list.append(calendar(first,first.weekday(),2,passed_date,range(first.weekday())))
 		else:
-			calendar_list.append(calendar(day_begin, 1))
-		day_begin = day_begin +  timedelta( days = 1 )
-				
-	paginator = Paginator(calendar_list, 15)
+			calendar_month_list.append(calendar(first,first.weekday(),1,passed_date,range(first.weekday()),aPlanning))
+		
+		if isNewMonth(first, first + timedelta( days = 1 )):
+			calendar_list.append(calendar_month_list)
+			calendar_month_list=[]
+		first = first +  timedelta( days = 1 )
+
+	# pagination by month			
+	paginator = Paginator(calendar_list, 1)
 	page = request.GET.get('page')
-	print page
 	try:
 		my_calandar_page = paginator.page(page)
 	except PageNotAnInteger:
@@ -60,7 +65,8 @@ def calendar_view(request):
 	except EmptyPage:
 		# If page is out of range (e.g. 9999), deliver last page of results.
 		my_calandar_page = paginator.page(paginator.num_pages)
-	return render(request, 'planning/avaibilities.html', {'calendar_list': my_calandar_page}) 
+	return render(request, 'planning/avaibilities.html', 
+				{'calendar_list': my_calandar_page }) 
 
 @login_required
 def import_planning(request):
@@ -79,37 +85,6 @@ def import_planning(request):
 		form = PlanningImportForm()
 		return render(request, 'planning/import.html', {'form': form, 'redirect' : False})
 
-@login_required
-def my_planning_view(request, old = '0'):
-	if old == '0':
-		aPlanningList = planning.objects.filter(
-						pdoctor = request.user,
-						day__range = [ datetime.date.today(),
-								datetime.date.today() + timedelta( days = 360 ) ])
-		
-		paginator = Paginator(aPlanningList, 15)
-		page = request.GET.get('page')
-		try:
-			planning_page = paginator.page(page)
-		except PageNotAnInteger:
-			planning_page = paginator.page(1)
-		except EmptyPage:
-			planning_page = paginator.page(paginator.num_pages)
-		return render(request, 'planning/planning_view.html', {'current_planning': planning_page, 'old': False})
-
-	else:
-		aPlanningList = planning.objects.filter(pdoctor = request.user
-							).exclude( day__range = [ datetime.date.today(),
-										  datetime.date.today() + timedelta( days = 360 )])
-	paginator = Paginator(aPlanningList, 15)
-	page = request.GET.get('page')
-	try:
-		planning_page = paginator.page(page)
-	except PageNotAnInteger:
-		planning_page = paginator.page(1)
-	except EmptyPage:
-		planning_page = paginator.page(paginator.num_pages)
-	return render (request, 'planning/planning_view.html', {'current_planning': planning_page, 'old': True})
 
 @login_required
 def auto_swap(request, planning_id):
@@ -117,7 +92,7 @@ def auto_swap(request, planning_id):
 		form = PlanningSwapForm(request.POST, doctor_id = request.user.id, planning_id = planning_id)
 		if form.is_valid():
 			form.save(doctor_id = request.user.id, planning_id = planning_id)
-			return HttpResponseRedirect('/planning/my_planning_view/0')
+			return HttpResponseRedirect('/planning/calendar_view/')
 	else:
 		
 		form = PlanningSwapForm(doctor_id = request.user.id, planning_id =  planning_id)
@@ -182,7 +157,7 @@ def validate_swap_display(request):
 		planning_page = paginator.page(1)
 	except EmptyPage:
 		planning_page = paginator.page(paginator.num_pages)		
-	return  render(request, 'planning/swap_validation_display.html', {'swap_list': swap_list})
+	return  render(request, 'planning/swap_validation_display.html', {'swap_list': planning_page})
 
 @login_required
 def validate_swap(request, swap_id):
@@ -197,7 +172,7 @@ def validate_swap(request, swap_id):
 		aSwap.validated = True
 		aSwap.save()
 		return HttpResponseRedirect('/planning/validate_swap_display')
-	except ObjectDoesNotExist, e:
+	except ObjectDoesNotExist:
 		return HttpResponseRedirect('/planning/validate_swap_display')
 
 @login_required

@@ -15,10 +15,14 @@
 
 {% for planning in swap_list %}
 <tr>
-	<td><i class="icon-calendar"></i> {{ planning.planning_to_swap.day|date:'d/m/Y' }} ({{ planning.planning_to_swap.ptimestamp.description }}) <i class="icon-arrow-right"></i> {{ planning.planning_to_swap.pjob.name }}</td>
+	<td><i class="icon-calendar"></i> {{ planning.planning_to_swap.day|date:'d/m/Y' }} ({{ planning.planning_to_swap.ptimestamp.description }}) 
+	<i class="icon-arrow-right"></i> {{ planning.planning_to_swap.pjob.name }}</td>
 	<td><i class="icon-user"></i> {{ planning.doctor_to_swap.username}}<td>
 	<td><i class="icon-resize-horizontal"></i> </td>
-	<td><i class="icon-calendar"></i> {{ planning.planning_to_swap_with.day|date:'d/m/Y' }} ({{ planning.planning_to_swap_with.ptimestamp.description }}) <i class="icon-arrow-right"></i> {{ planning.planning_to_swap_with.pjob.name }}</td>
+	<td>	    
+	   <i class="icon-calendar"></i> {{ planning.planning_to_swap_with.day|date:'d/m/Y' }} ({{ planning.planning_to_swap_with.ptimestamp.description }})
+	   <i class="icon-arrow-right"></i> {{ planning.planning_to_swap_with.pjob.name }}
+	</td>
 	<td><i class="icon-user"></i> {{ planning.doctor_to_swap_with.username}}<td>
 	<td>
 	<div class="btn-group">

@@ -8,13 +8,13 @@ def hospital_login(request):
 		form = LoginForm(request.POST)
 		if form.is_valid(request = request):
 			if 'old_password' not in request.POST:
-				return HttpResponseRedirect('/planning/my_planning_view/0/')
+				return HttpResponseRedirect('/planning/calendar_view/')
 			else:
 				if request.POST['new_password1'] == request.POST['new_password2']:
 					aDoctor = doctors.objects.get(username = request.user)
 					aDoctor.set_password(request.POST['new_password1'])
 					aDoctor.save()
-			return HttpResponseRedirect('/planning/my_planning_view/0/')
+			return HttpResponseRedirect('/planning/calendar_view/')
 		if 'old_password' not in request.POST:
 			return render(request, 'services/login.html', {'form': form, 'redirect' : True, 'status': False, 'message' : 'Impossible de se connecter, utilisateur ou mot de passe invalide' })
 		else:
