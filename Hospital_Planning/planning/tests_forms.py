@@ -11,7 +11,7 @@ from django.test.client import Client
 from planning.forms import PlanningSwapForm
 from planning.extra.methods import UserSwap, getUserSwapForPlanningSwap, handle_uploaded_planning
 from planning.models import planning, planning_swap
-from services.models import doctors, days, jobs, timestamps#, doctors_jobs
+from planning.models import doctors, days, jobs, timestamps#, doctors_jobs
 import datetime, os, csv
 from datetime import timedelta
 
@@ -104,91 +104,6 @@ class planningImportTest(TestCase):
 		self.assertEqual(24, len(planning.objects.all()))
 		os.remove(os.path.dirname(os.path.abspath(__file__))+'/test2.csv')
 
-class planningViewTest(TestCase):
-
-	def setUp(self):
-		init_db_test()
-		self.client = Client()	
-
-	def test_simple_view_current(self):
-		"""	"""
-		planning.objects.create(day = datetime.date.today(), pdoctor_id = 1, pjob_id = 1, ptimestamp_id = 1)
-		planning.objects.create(day = datetime.date.today(), pdoctor_id = 1, pjob_id = 2, ptimestamp_id = 3)
-		planning.objects.create(day = datetime.date.today(), pdoctor_id = 3, pjob_id=  1, ptimestamp_id = 2)
-		self.client.login(username='kdo1', password='toto')
-		response = self.client.get('/planning/my_planning_view/0/')
-		self.assertEqual(response.status_code, 200)
-
-	def test_simple_view_history(self):
-		"""	"""
-		planning.objects.create(day = datetime.date.today() -  timedelta( days = 1), pdoctor_id = 1, pjob_id = 1, ptimestamp_id = 1)
-		planning.objects.create(day = datetime.date.today() -  timedelta( days = 1), pdoctor_id = 1, pjob_id = 2, ptimestamp_id = 3)
-		self.client.login(username='kdo1', password='toto')
-		response = self.client.get('/planning/my_planning_view/1/')
-		self.assertEqual(response.status_code, 200)
-		
-	def test_simple_view_auto_swap(self):
-		"""	"""
-		planning.objects.create(day = datetime.date.today(), pdoctor_id = 1, pjob_id = 1, ptimestamp_id = 1)
-		planning.objects.create(day = datetime.date.today(), pdoctor_id = 2, pjob_id = 2, ptimestamp_id = 1)
-		planning.objects.create(day = datetime.date.today(), pdoctor_id = 4, pjob_id= 1, ptimestamp_id = 2)
-		planning.objects.create(day = datetime.date.today(), pdoctor_id = 3, pjob_id= 1, ptimestamp_id = 3)
-		self.client.login(username='kdo1', password='toto')
-		response = self.client.get('/planning/auto_swap_request/1/')
-		self.assertEqual(response.status_code, 200)
-
-	def test_simple_view_import(self):
-		"""	"""
-		self.client.login(username='kdo1', password='toto')
-		response = self.client.get('/planning/import_planning/')
-		self.assertEqual(response.status_code, 200)
-
-	def test_simple_post_view_auto_swap(self):
-		"""	"""
-		planning.objects.create(day = datetime.date.today(), pdoctor_id = 1, pjob_id = 1, ptimestamp_id = 1)
-		planning.objects.create(day = datetime.date.today(), pdoctor_id = 2, pjob_id = 2, ptimestamp_id = 1)
-		planning.objects.create(day = datetime.date.today(), pdoctor_id = 4, pjob_id= 1, ptimestamp_id = 2)
-		planning.objects.create(day = datetime.date.today(), pdoctor_id = 3, pjob_id= 1, ptimestamp_id = 3)
-		self.client.login(username='kdo1', password='toto')
-		choices = [4]
-		test = self.client.post('/planning/auto_swap_request/1/',{'subject': 'Hello du con', 
-				'message':'Je vais echanger ta garde', 
-				'planning_swap': choices })
-
-		#result=mail.objects.filter( cuser = doctors.objects.get(id=4))
-		#self.assertEqual(result[0].text, 'Je vais echanger ta garde')
-		self.assertEqual(planning_swap.objects.get(id =1).planning_to_swap.id, 1)
-		self.assertEqual(planning_swap.objects.get(id =1).planning_to_swap_with.id, 4)
-
-	def test_simple_swap_request_display(self):
-		"""	"""
-		swap = planning.objects.create(day = datetime.date.today(), pdoctor_id = 1, pjob_id = 1, ptimestamp_id = 1)
-		planning.objects.create(day = datetime.date.today(), pdoctor_id = 2, pjob_id = 2, ptimestamp_id = 1)
-		swap2 = planning.objects.create(day = datetime.date.today(), pdoctor_id = 4, pjob_id= 1, ptimestamp_id = 2)
-		planning.objects.create(day = datetime.date.today(), pdoctor_id = 3, pjob_id= 1, ptimestamp_id = 3)
-		planning_swap.objects.create(date = datetime.date.today(), 
-				planning_to_swap = swap2,
-				planning_to_swap_with = swap, 
-				doctor_to_swap = doctors.objects.get(id=3),
-				doctor_to_swap_with = doctors.objects.get(id=1))
-		self.client.login(username='kdo1', password='toto')
-		response = self.client.get('/planning/swap_request_display')
-		self.assertEqual(response.status_code, 200)
-
-	def test_simple_swap_request_accept(self):
-		swap = planning.objects.create(day = datetime.date.today(), pdoctor_id = 1, pjob_id = 1, ptimestamp_id = 1)
-		planning.objects.create(day = datetime.date.today(), pdoctor_id = 2, pjob_id = 2, ptimestamp_id = 1)
-		swap2 = planning.objects.create(day = datetime.date.today(), pdoctor_id = 4, pjob_id= 1, ptimestamp_id = 2)
-		planning.objects.create(day = datetime.date.today(), pdoctor_id = 3, pjob_id= 1, ptimestamp_id = 3)
-		planning_swap.objects.create(date = datetime.date.today(),
-						planning_to_swap = swap2,
-						planning_to_swap_with = swap,
-						doctor_to_swap = doctors.objects.get(id=3),
-						doctor_to_swap_with = doctors.objects.get(id=1))
-		self.client.login(username='kdo1', password='toto')
-		test = self.client.post('/planning/accept_swap/1/')
-		#self.assertEqual(planning.objects.get(id=1).pdoctor.id,3)
-		#self.assertEqual(planning.objects.get(id=3).pdoctor.id,1)
 
 class planningFormTest(TestCase):
 

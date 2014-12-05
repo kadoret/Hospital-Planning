@@ -2,7 +2,7 @@
 from django.shortcuts import render, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from planning.models import planning, planning_swap, reserved_days
+from planning.models import planning, planning_swap, reserved_days, doctors
 from planning.forms import PlanningSwapForm, PlanningImportForm, PlanningForm
 from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime, timedelta
@@ -208,3 +208,35 @@ def view(request):
 	except EmptyPage:
 		planning_page = paginator.page(paginator.num_pages)
 	return  render(request, 'planning/view.html', {'planning_list': planning_page})
+
+from django.shortcuts import render, HttpResponseRedirect
+from django.contrib.auth import logout
+from planning.forms import LoginForm
+
+def hospital_login(request):
+	if request.method == 'POST':
+		form = LoginForm(request.POST)
+		if form.is_valid(request = request):
+			if 'old_password' not in request.POST:
+				return HttpResponseRedirect('/planning/calendar_view/')
+			else:
+				if request.POST['new_password1'] == request.POST['new_password2']:
+					aDoctor = doctors.objects.get(username = request.user)
+					aDoctor.set_password(request.POST['new_password1'])
+					aDoctor.save()
+			return HttpResponseRedirect('/planning/calendar_view/')
+		if 'old_password' not in request.POST:
+			return render(request, 'services/login.html', {'form': form, 'redirect' : True, 'status': False, 'message' : 'Impossible de se connecter, utilisateur ou mot de passe invalide' })
+		else:
+			return HttpResponseRedirect('/services/change/')
+	else:
+		form = LoginForm()
+		return render(request, 'services/login.html', {'form': form, 'redirect' : False})
+
+def hospital_logout(request):
+	logout(request)
+	return HttpResponseRedirect('/')
+
+def hospital_password_change(request):
+	#TODO
+	pass	

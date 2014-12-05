@@ -12,7 +12,7 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'ch',                      # Or path to database file if using sqlite3.
+        'NAME': 'hospital_planning',                      # Or path to database file if using sqlite3.
         'USER': 'root',                      # Not used with sqlite3.
         'PASSWORD': 'moke93',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
@@ -30,6 +30,8 @@ TIME_ZONE = 'Europe/Paris'
 LANGUAGE_CODE = 'fr-FR'
 
 SITE_ID = 1
+
+
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
@@ -111,7 +113,7 @@ LOGIN_REDIRECT_URL = '/planning'
 WSGI_APPLICATION = 'Hospital_Planning.wsgi.application'
 
 TEMPLATE_DIRS = (
-	"/home/knguyen/dev/Hospital-Planning/Hospital_Planning/templates/",
+	"/home/knguyen/dev/Hospital-Planning_django1.7/Hospital_Planning/templates/",
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -125,16 +127,15 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
 	'planning',
-	'services',
-	'blog',	
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     'django.contrib.admindocs',
 )
-CUSTOM_USER_MODEL = 'services.doctors'
+
+AUTH_USER_MODEL = 'planning.doctors'
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 AUTHENTICATION_BACKENDS = (
-	'services.models.doctors_auth_backend',
 	'django.contrib.auth.backends.ModelBackend',	
 )
 # A sample logging configuration. The only tangible logging

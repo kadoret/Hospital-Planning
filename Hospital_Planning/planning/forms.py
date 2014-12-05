@@ -1,16 +1,59 @@
 from django import forms
-from planning.extra.methods import UserSwap, getUserSwapForPlanningSwap, setPlanningSwap, handle_uploaded_planning
-from planning.models import planning
+from planning.extra.methods import getUserSwapForPlanningSwap, setPlanningSwap, handle_uploaded_planning
+from planning.models import planning, doctors
 import datetime
 from datetime import timedelta
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, UserChangeForm
+from django.contrib.auth import authenticate, login
 
+class LoginForm(AuthenticationForm):
+	"""
+	class LoginForm 
+		Form for login to the site
+	"""	
+	def is_valid(self, *args, **kwargs):
+		request = kwargs.pop('request')
+		super(LoginForm, self).is_valid(*args, **kwargs)
+		if 'old_password' in request.POST:
+			user = authenticate(username= request.user,
+						password=request.POST['old_password'] )
+		else:
+			user = authenticate(username= self.request['username'], 
+					password=self.request['password'] )
+		if user is not None:
+			if user.is_active:
+				login(request, user)
+				return True
+		return False
+
+#class doctorForm(UserCreationForm):
+#	username = forms.RegexField(label=("Identifiant"), max_length=30, regex=r'^[ \t\r\n\f\w.@+*-]+$',
+#	help_text = ("Required. 30 characters or fewer. Letters, digits and @/./+/-/_ only."),
+#	error_messages = {'invalid': ("This value may contain only letters, numbers and @/./+/-/_ characters.")})
+#	email = forms.CharField(max_length=75, required=True)
+#	class Meta:
+#		model = doctors
+#		exclude = []
+
+#class doctorChangeForm(UserChangeForm):
+#	username = forms.RegexField(label=("Identifiant"), max_length=30, regex=r'^[ \t\r\n\f\w.@+*-]+$',
+#	help_text = ("Required. 30 characters or fewer. Letters, digits and @/./+/-/_ only."),
+#	error_messages = {'invalid': ("This value may contain only letters, numbers and @/./+/-/_ characters.")})
+#	email = forms.CharField(max_length=75, required=True)
+#	class Meta:
+#		model = doctors
+#		exclude = []
 
 
 class PlanningForm(forms.ModelForm):
+	"""
+	class PlanningForm
+		Form to planning
+	"""
 	class Meta:
 		model = planning
 		exclude = ('request_swap', 'official_approved', 'request_swap_to')
- 
+
 
 class PlanningImportForm(forms.Form):
 	"""

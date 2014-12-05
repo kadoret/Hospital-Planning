@@ -42,7 +42,7 @@
                             </a>
                         {% endif %}                      
                         <ul class="dropdown-menu">
-                            <li><a href="{% url planning.views.reserved_day_remove aday.day|date:'Y' aday.day|date:'m' aday.day|date:'d'%}/?page={{ calendar_month.number }}">Rendre échangeable</a></li>
+                            <li><a href="{% url 'planning.views.reserved_day_remove' aday.day|date:'Y' aday.day|date:'m' aday.day|date:'d'%}/?page={{ calendar_month.number }}">Rendre échangeable</a></li>
                         </ul>
                     </div>
                 {% elif  aday.type  == 1 %}    
@@ -62,7 +62,7 @@
                                                 {% if plan.request_swap  %}                                     
                                                     <li><a href="#">Echange en cours</a></li>
                                                 {% else %}
-                                                    <li><a href="{% url planning.views.auto_swap plan.id %}">Echanger garde</a></li>
+                                                    <li><a href="{% url 'planning.views.auto_swap' plan.id %}">Echanger garde</a></li>
                                                 {% endif %}
                                             </ul>
                                         </li>
@@ -82,7 +82,7 @@
                             </a>
                          {% endif %}                      
                         <ul class="dropdown-menu">
-                            <li><a href="{% url planning.views.reserved_day_add aday.day|date:'Y' aday.day|date:'m' aday.day|date:'d'%}/?page={{ calendar_month.number }}">Rendre non échangeable</a></li>
+                            <li><a href="{% url 'planning.views.reserved_day_add' aday.day|date:'Y' aday.day|date:'m' aday.day|date:'d'%}/?page={{ calendar_month.number }}">Rendre non échangeable</a></li>
                         </ul>
                     </div>
                 {% endif %}

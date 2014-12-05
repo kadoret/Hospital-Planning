@@ -28,10 +28,10 @@
 		</a>
 		<ul class="dropdown-menu">
 			{% if  not my %}
-					<li><a href="{% url planning.views.accept_swap planning.id %}"><i class="icon-thumbs-up"></i> Accepter</a></li>
-					<li><a href="{% url planning.views.cancel_swap planning.id %}"><i class="icon-thumbs-down"></i> Refuser</a></li>
+					<li><a href="{% url 'planning.views.accept_swap' planning.id %}"><i class="icon-thumbs-up"></i> Accepter</a></li>
+					<li><a href="{% url 'planning.views.cancel_swap' planning.id %}"><i class="icon-thumbs-down"></i> Refuser</a></li>
 			{% else %}
-				<li><a href="{% url planning.views.cancel_swap planning.id %}"><i class="icon-remove"></i> Annuler</a></li>
+				<li><a href="{% url 'planning.views.cancel_swap' planning.id %}"><i class="icon-remove"></i> Annuler</a></li>
 			{% endif %}
 		</ul>
 	</div>

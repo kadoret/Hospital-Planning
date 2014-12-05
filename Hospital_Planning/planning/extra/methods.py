@@ -3,8 +3,7 @@ Created on Nov 22, 2014
 
 @author: knguyen
 '''
-from services.models import doctors, timestamps, jobs
-from planning.models import planning, planning_swap, reserved_days
+from planning.models import planning, planning_swap, reserved_days, doctors, timestamps, jobs
 from django import forms
 import datetime
 from datetime import timedelta

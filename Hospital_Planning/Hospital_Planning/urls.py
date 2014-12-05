@@ -7,9 +7,8 @@ admin.autodiscover()
 urlpatterns = patterns('',
 
 	url(r'^planning/', include('planning.urls')),
-	url(r'^$' , include('services.urls')),
-	url(r'^services/', include('services.urls')),
-	url(r'^blog/', include('blog.urls')),
+	url(r'^$' , include('planning.urls')),
+	#url(r'^blog/', include('blog.urls')),
 #	url(r'^login/', include('services.urls')),
 #	url(r'^logout/', include('services.urls')),
 	#url(r'^service/', include('services.urls')),
