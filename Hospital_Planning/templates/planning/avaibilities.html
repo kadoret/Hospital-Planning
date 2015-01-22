@@ -36,18 +36,18 @@
                         {% if aday.passed %}
                             {{ aday.day|date:'d/m/Y' }}
                         {% else %}   
-                            <a class="btn dropdown-toggle btn-info btn-small" data-toggle="dropdown" href="#">
+                            <a class="btn dropdown-toggle btn-link btn-small" data-toggle="dropdown" href="#">
                             {{ aday.day|date:'d/m/Y' }}
                             <span class="caret"></span>
                             </a>
                         {% endif %}                      
                         <ul class="dropdown-menu">
-                            <li><a href="{% url 'planning.views.reserved_day_remove' aday.day|date:'Y' aday.day|date:'m' aday.day|date:'d'%}/?page={{ calendar_month.number }}">Rendre échangeable</a></li>
+                            <li><a href="{% url 'planning.view.views_functional.reserved_day_remove' aday.day|date:'Y' aday.day|date:'m' aday.day|date:'d'%}/?page={{ calendar_month.number }}">Rendre échangeable</a></li>
                         </ul>
                     </div>
                 {% elif  aday.type  == 1 %}    
                     <div class="btn-group">
-                            <a class="btn dropdown-toggle btn-danger btn-small" data-toggle="dropdown" href="#">
+                            <a class="btn dropdown-toggle btn-link btn-small" data-toggle="dropdown" href="#">
                                 {{ aday.day|date:'d/m/Y' }}
                                 <span class="caret"></span>
                              </a>
@@ -62,7 +62,7 @@
                                                 {% if plan.request_swap  %}                                     
                                                     <li><a href="#">Echange en cours</a></li>
                                                 {% else %}
-                                                    <li><a href="{% url 'planning.views.auto_swap' plan.id %}">Echanger garde</a></li>
+                                                    <li><a href="{% url 'planning.view.views_functional.auto_swap' plan.id %}">Echanger garde</a></li>
                                                 {% endif %}
                                             </ul>
                                         </li>
@@ -76,13 +76,13 @@
                         {% if aday.passed %}                            
                             {{ aday.day|date:'d/m/Y' }}                          
                          {% else %} 
-                            <a class="btn dropdown-toggle btn-success btn-small" data-toggle="dropdown" href="#">
+                            <a class="btn dropdown-toggle btn-link btn-small" data-toggle="dropdown" href="#">
                             {{ aday.day|date:'d/m/Y' }}
                             <span class="caret"></span>
                             </a>
                          {% endif %}                      
                         <ul class="dropdown-menu">
-                            <li><a href="{% url 'planning.views.reserved_day_add' aday.day|date:'Y' aday.day|date:'m' aday.day|date:'d'%}/?page={{ calendar_month.number }}">Rendre non échangeable</a></li>
+                            <li><a href="{% url 'planning.view.views_functional.reserved_day_add' aday.day|date:'Y' aday.day|date:'m' aday.day|date:'d'%}/?page={{ calendar_month.number }}">Rendre non échangeable</a></li>
                         </ul>
                     </div>
                 {% endif %}

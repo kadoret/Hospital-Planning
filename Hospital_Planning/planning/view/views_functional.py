@@ -68,22 +68,7 @@ def calendar_view(request):
 	return render(request, 'planning/avaibilities.html', 
 				{'calendar_list': my_calandar_page }) 
 
-@login_required
-def import_planning(request):
-	if request.method == 'POST':
-		form = PlanningImportForm(request.POST, request.FILES)
-		if form.is_valid():
-			(status, failed, updated, created ) = form.save(file = request.FILES['file'])
-			message = "created : " + str(created) + ", failed: " + str(failed) + ", updated : " +  str(updated)
-			new_form = PlanningImportForm()
-			print message
-			return render(request,'planning/import.html', {'form': new_form,
-										'redirect' : True, 
-										'status': status,
-										'message': message})
-	else:
-		form = PlanningImportForm()
-		return render(request, 'planning/import.html', {'form': form, 'redirect' : False})
+
 
 
 @login_required
@@ -176,38 +161,10 @@ def validate_swap(request, swap_id):
 		return HttpResponseRedirect('/planning/validate_swap_display')
 
 @login_required
-def create(request):
-	if request.method == 'POST':
-		form = PlanningForm(request.POST)
-		if form.is_valid():
-			form.save()
-			return HttpResponseRedirect('/planning/view')
-	else:
-		form = PlanningForm()
-		return render(request, 'planning/create.html', {'form': form})
-
-@login_required
-def delete(request, planning_id):
-	aPlanning = planning.objects.get(id = planning_id)
-	aPlanning.delete()
-	return HttpResponseRedirect('/planning/view')
-
-@login_required
 def swap(request):
 	pass
 
-@login_required
-def view(request):
-	planning_list = planning.objects.all()
-	paginator = Paginator(planning_list, 15)
-	page = request.GET.get('page')
-	try:
-		planning_page = paginator.page(page)
-	except PageNotAnInteger:
-		planning_page = paginator.page(1)
-	except EmptyPage:
-		planning_page = paginator.page(paginator.num_pages)
-	return  render(request, 'planning/view.html', {'planning_list': planning_page})
+
 
 from django.shortcuts import render, HttpResponseRedirect
 from django.contrib.auth import logout
@@ -226,12 +183,12 @@ def hospital_login(request):
 					aDoctor.save()
 			return HttpResponseRedirect('/planning/calendar_view/')
 		if 'old_password' not in request.POST:
-			return render(request, 'services/login.html', {'form': form, 'redirect' : True, 'status': False, 'message' : 'Impossible de se connecter, utilisateur ou mot de passe invalide' })
+			return render(request, 'planning/login.html', {'form': form, 'redirect' : True, 'status': False, 'message' : 'Impossible de se connecter, utilisateur ou mot de passe invalide' })
 		else:
-			return HttpResponseRedirect('/services/change/')
+			return HttpResponseRedirect('/planning/change/')
 	else:
 		form = LoginForm()
-		return render(request, 'services/login.html', {'form': form, 'redirect' : False})
+		return render(request, 'planning/login.html', {'form': form, 'redirect' : False})
 
 def hospital_logout(request):
 	logout(request)

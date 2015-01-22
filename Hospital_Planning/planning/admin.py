@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
-from planning.models import doctors
+from planning.models import doctors,jobs,days,timestamps
 
 
 class DoctorCreationForm(forms.ModelForm):
@@ -14,7 +14,7 @@ class DoctorCreationForm(forms.ModelForm):
 
     class Meta:
         model = doctors
-        fields = ('username', 'email')
+        fields = ('username', 'email','djobs','is_admin')
 
     def clean_password2(self):
         # Check that the two password entries match
@@ -30,6 +30,8 @@ class DoctorCreationForm(forms.ModelForm):
         user.set_password(self.cleaned_data["password1"])
         if commit:
             user.save()
+            self.save_m2m()
+
         return user
 
 
@@ -42,7 +44,7 @@ class DoctorChangeForm(forms.ModelForm):
 
     class Meta:
         model = doctors
-        fields = ('username', 'password', 'email', 'is_active', 'is_admin')
+        fields = ('username', 'password', 'email','djobs', 'is_active', 'is_admin')
 
     def clean_password(self):
         # Regardless of what the user provides, return the initial value.
@@ -51,35 +53,11 @@ class DoctorChangeForm(forms.ModelForm):
         return self.initial["password"]
 
 
-class MyUserAdmin(UserAdmin):
-    # The forms to add and change user instances
-    form = DoctorChangeForm
-    add_form = DoctorCreationForm
-
-    # The fields to be used in displaying the User model.
-    # These override the definitions on the base UserAdmin
-    # that reference specific fields on auth.User.
-    list_display = ('username', 'email', 'is_admin')
-    list_filter = ('is_admin',)
-    fieldsets = (
-        (None, {'fields': ('username', 'password')}),
-        ('Personal info', {'fields': ('email',)}),
-        ('Permissions', {'fields': ('is_admin',)}),
-    )
-    # add_fieldsets is not a standard ModelAdmin attribute. UserAdmin
-    # overrides get_fieldsets to use this attribute when creating a user.
-    add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('username', 'email', 'password1', 'password2')}
-        ),
-    )
-    search_fields = ('username',)
-    ordering = ('username',)
-    filter_horizontal = ()
-
 # Now register the new UserAdmin...
-admin.site.register(doctors, MyUserAdmin)
+#admin.site.register(doctors, MyUserAdmin)
 # ... and, since we're not using Django's built-in permissions,
 # unregister the Group model from admin.
 admin.site.unregister(Group)
+admin.site.register(jobs)
+admin.site.register(days)
+admin.site.register(timestamps)

@@ -126,7 +126,9 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'bootstrap3',
 	'planning',
+
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
@@ -138,6 +140,7 @@ TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 AUTHENTICATION_BACKENDS = (
 	'django.contrib.auth.backends.ModelBackend',	
 )
+
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
 # the site admins on every HTTP 500 error when DEBUG=False.

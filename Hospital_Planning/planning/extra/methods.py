@@ -169,6 +169,7 @@ def getUserSwapForPlanningSwap(current_user, planning_id):
 		planning_swap = planning.objects.get( id = planning_id )
 		# try to hack ...
 		if planning_swap.pdoctor_id != current_user:
+			print 'oups'
 			return []
 	except:
 		return [] 
@@ -176,6 +177,8 @@ def getUserSwapForPlanningSwap(current_user, planning_id):
 	users_same_job = doctors.objects.filter(djobs = planning_swap.pjob
 					).exclude(id = planning_swap.pdoctor_id
 					).values_list('id',flat=True)
+	print planning_swap.pdoctor_id
+	print users_same_job
 	# get user who works the days or the days before and the day after
 	users_working = planning.objects.filter( day = planning_swap.day,
 						 ptimestamp = planning_swap.ptimestamp_id 
@@ -186,7 +189,7 @@ def getUserSwapForPlanningSwap(current_user, planning_id):
 				for item in set(users_same_job).difference( set(users_working) )
 					if not reserved_days.objects.filter(day = planning_swap.day,
 									pdoctor = int(item)) ]
-					
+	print elegible_users				
 	# now  take attention to the relation between each jobs, if jobs are linked (similar) ok you can swap!
 	user_current_job = jobs.objects.get(id = planning_swap.pjob_id)
 	jobs_linked_list = [ int(item) 
@@ -222,6 +225,7 @@ def getUserSwapForPlanningSwap(current_user, planning_id):
 							).values_list('pjob_id', flat=True)[0] in jobs_linked_list:
 				# check the user has not reserved that day
 				if not reserved_days.objects.filter(day = aSwapInfo[0],  pdoctor = current_user):
+					print 'OK'
 					final.append( 
 						UserSwap( 
 							doctors.objects.get(id = long(user_id))

@@ -1,16 +1,26 @@
 from django import forms
 from planning.extra.methods import getUserSwapForPlanningSwap, setPlanningSwap, handle_uploaded_planning
-from planning.models import planning, doctors
+from planning.models import planning,jobs,days,timestamps
 import datetime
 from datetime import timedelta
+from crispy_forms.helper import FormHelper
+from crispy_forms.bootstrap import StrictButton                                               
+from crispy_forms.layout import Layout, HTML, Submit
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, UserChangeForm
 from django.contrib.auth import authenticate, login
+from django.utils.translation import ugettext_lazy as _
+
 
 class LoginForm(AuthenticationForm):
 	"""
 	class LoginForm 
 		Form for login to the site
 	"""	
+
+	def __init__(self, *args, **kwargs):                                                   
+		super(LoginForm, self).__init__(*args, **kwargs)
+		self.fields['username'].label = 'Identifiant'
+		
 	def is_valid(self, *args, **kwargs):
 		request = kwargs.pop('request')
 		super(LoginForm, self).is_valid(*args, **kwargs)
@@ -26,34 +36,67 @@ class LoginForm(AuthenticationForm):
 				return True
 		return False
 
-#class doctorForm(UserCreationForm):
-#	username = forms.RegexField(label=("Identifiant"), max_length=30, regex=r'^[ \t\r\n\f\w.@+*-]+$',
-#	help_text = ("Required. 30 characters or fewer. Letters, digits and @/./+/-/_ only."),
-#	error_messages = {'invalid': ("This value may contain only letters, numbers and @/./+/-/_ characters.")})
-#	email = forms.CharField(max_length=75, required=True)
-#	class Meta:
-#		model = doctors
-#		exclude = []
+class JobsForm(forms.ModelForm):
+	class Meta:
+		model = jobs
+		#exclude = ('request_swap', 'official_approved', 'request_swap_to')
 
-#class doctorChangeForm(UserChangeForm):
-#	username = forms.RegexField(label=("Identifiant"), max_length=30, regex=r'^[ \t\r\n\f\w.@+*-]+$',
-#	help_text = ("Required. 30 characters or fewer. Letters, digits and @/./+/-/_ only."),
-#	error_messages = {'invalid': ("This value may contain only letters, numbers and @/./+/-/_ characters.")})
-#	email = forms.CharField(max_length=75, required=True)
-#	class Meta:
-#		model = doctors
-#		exclude = []
+		labels = {
+			'name': _('Service'),
+			'serial': _('Identifiant'),
+			'day': _('Jour'),
+			'linked_to': _('Links'),
+		}
+	def __init__(self, *args, **kwargs):                                                   
+		super(JobsForm, self).__init__(*args, **kwargs) 
+		
+class DaysForm(forms.ModelForm):
+	class Meta:
+		model = days
+		#exclude = ('request_swap', 'official_approved', 'request_swap_to')
 
+		labels = {
+			'name': _('Jour'),
+			'timestamp': _('Tranche horaire'),
+		}
+	def __init__(self, *args, **kwargs):                                                   
+		super(DaysForm, self).__init__(*args, **kwargs) 
 
+class TimestampsForm(forms.ModelForm):
+	class Meta:
+		model = timestamps
+		#exclude = ('request_swap', 'official_approved', 'request_swap_to')
+
+		labels = {
+			'serial': _('Identifiant'),
+			'description': _('Description'),
+		}
+	def __init__(self, *args, **kwargs):                                                   
+		super(TimestampsForm, self).__init__(*args, **kwargs)
+							
 class PlanningForm(forms.ModelForm):
 	"""
 	class PlanningForm
 		Form to planning
 	"""
+
 	class Meta:
 		model = planning
 		exclude = ('request_swap', 'official_approved', 'request_swap_to')
-
+		widgets = {
+			'day': forms.DateInput(format='%Y/%m/%d', attrs={'class':'dateinput'}),
+		}
+		labels = {
+			'day': _('Jour'),
+			'pjob': _('Service'),
+			'pdoctor': _('Docteur'),
+			'ptimestamp': _('Matin/Midi/Soir'),
+		}
+	def is_valid(self, *args, **kwargs):
+		print self.fields['day']
+		return True	
+	def __init__(self, *args, **kwargs):                                                   
+		super(PlanningForm, self).__init__(*args, **kwargs) 
 
 class PlanningImportForm(forms.Form):
 	"""
@@ -74,6 +117,7 @@ class PlanningSwapForm(forms.Form):
 	"""
 	# Dynamic change of choice, use a function instead of static list 
 	planning_swap = forms.MultipleChoiceField(choices = [], widget=forms.SelectMultiple(attrs={'class':'input-xxlarge', 'size':'30'}))
+	
 	def __init__(self, *args, **kwargs):
 		""" override init method to get users to swap """
 		doctor_id = kwargs.pop('doctor_id')
