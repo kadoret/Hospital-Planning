@@ -5,7 +5,7 @@ from django.contrib.auth.views import password_change
 # admin.autodiscover()
 
 urlpatterns = patterns('planning.view',
-	url(r'^$', 'views_functional.hospital_login'),
+	url(r'^$', 'views_connexion.login'),
 	url(r'^auto_swap_request/(\d+)/?$', 'views_functional.auto_swap'),
 	url(r'^swap_request/(\d+)/?$', 'views_functional.swap'),
 	url(r'^swap_request_display/?$', 'views_functional.swap_request_display'),
@@ -16,10 +16,10 @@ urlpatterns = patterns('planning.view',
 	url(r'^cancel_swap/(\d+)/?$', 'views_functional.cancel_swap'),
 	url(r'^reserved_day_add/(\d{4})/(\d{2})/(\d{2})/?$', 'views_functional.reserved_day_add'),
 	url(r'^reserved_day_remove/(\d{4})/(\d{2})/(\d{2})/?$', 'views_functional.reserved_day_remove'),
-	url(r'^calendar_view/?$', 'views_functional.calendar_view'),
+	url(r'^view_calendar/?$', 'views_functional.view_calendar'),
 
-	url(r'^login/?$', 'views_functional.hospital_login'),
-	url(r'^logout/?$', 'views_functional.hospital_logout'),
+	url(r'^login/?$', 'views_connexion.login'),
+	url(r'^logout/?$', 'views_connexion.logout_'),
 	
 	url(r'^admin/view_planning/?$', 'views_admin.view_planning'),
 	url(r'^admin/create_planning/?$', 'views_admin.create_planning'),

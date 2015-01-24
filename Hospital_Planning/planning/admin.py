@@ -58,6 +58,3 @@ class DoctorChangeForm(forms.ModelForm):
 # ... and, since we're not using Django's built-in permissions,
 # unregister the Group model from admin.
 admin.site.unregister(Group)
-admin.site.register(jobs)
-admin.site.register(days)
-admin.site.register(timestamps)

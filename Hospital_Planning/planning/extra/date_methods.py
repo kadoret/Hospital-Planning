@@ -7,13 +7,14 @@ import datetime
 
 """ Calendar class  """
 class calendar:
-    def __init__(self, day, description, mytipe, passed, irange =  None, work = None):
+    def __init__(self, day, description, mytype, passed, irange =  None, work = None):
         self.day = day
         self.desc = description
-        self.type = mytipe
+        self.type = mytype
         self.passed = passed
         self.range = irange
         self.work = work
+
       
         
 def getFirstDayOfMonth(aDay):

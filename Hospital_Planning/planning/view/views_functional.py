@@ -2,13 +2,13 @@
 from django.shortcuts import render, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from planning.models import planning, planning_swap, reserved_days, doctors
-from planning.forms import PlanningSwapForm, PlanningImportForm, PlanningForm
+from planning.models import planning, planning_swap, reserved_days
+from planning.forms import PlanningSwapForm
 from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime, timedelta
 import datetime
+import locale
 from  planning.extra.date_methods import isNewMonth, getFirstDayOfMonth, calendar
-
 
 	
 @login_required
@@ -16,7 +16,7 @@ def reserved_day_add(request, year, month, day):
 	aDay = datetime.date(int(year),int(month),int(day))
 	page = request.GET.get('page')
 	reserved_days.objects.create(day = aDay, pdoctor_id = request.user.id)
-	return HttpResponseRedirect('/planning/calendar_view?page='+ str(page))
+	return HttpResponseRedirect('/planning/view_calendar?page='+ str(page))
 
 @login_required
 def reserved_day_remove(request, year, month, day):
@@ -24,15 +24,19 @@ def reserved_day_remove(request, year, month, day):
 	page = request.GET.get('page')
 	object_to_remove = reserved_days.objects.get(day = aDay, pdoctor_id = request.user.id)
 	object_to_remove.delete()
-	return HttpResponseRedirect('/planning/calendar_view?page='+ str(page))
+	return HttpResponseRedirect('/planning/view_calendar?page='+ str(page))
 
 @login_required
-def calendar_view(request):
+def view_calendar(request):
 	# Return the personal calendar of the user 
 	first = getFirstDayOfMonth(datetime.date.today())
+	# Limitation max of planning is 360 days
 	end = datetime.date.today() + timedelta( days = 360 )
 	calendar_list = []
+	month_list = []
 	calendar_month_list = []
+
+	# iterate until the end todays + 360
 	while first < end:
 		if first < datetime.date.today():
 			passed_date = True
@@ -51,22 +55,29 @@ def calendar_view(request):
 		
 		if isNewMonth(first, first + timedelta( days = 1 )):
 			calendar_list.append(calendar_month_list)
+			month_list.append(first.strftime("%B"))
 			calendar_month_list=[]
 		first = first +  timedelta( days = 1 )
 
 	# pagination by month			
 	paginator = Paginator(calendar_list, 1)
+	paginator_month = Paginator(month_list, 1)
+	#print paginator_month
 	page = request.GET.get('page')
 	try:
 		my_calandar_page = paginator.page(page)
+		my_month_page = paginator_month.page(page)
 	except PageNotAnInteger:
 		# If page is not an integer, deliver first page.
 		my_calandar_page = paginator.page(1)
+		my_month_page = paginator_month.page(1)
 	except EmptyPage:
 		# If page is out of range (e.g. 9999), deliver last page of results.
 		my_calandar_page = paginator.page(paginator.num_pages)
-	return render(request, 'planning/avaibilities.html', 
-				{'calendar_list': my_calandar_page }) 
+		my_month_page = paginator_month.page(paginator_month.num_pages)
+	return render(request, 'planning/view_calendar.html', 
+				{'calendar_list': my_calandar_page ,
+				'mymonth' : my_month_page}) 
 
 
 
@@ -77,7 +88,7 @@ def auto_swap(request, planning_id):
 		form = PlanningSwapForm(request.POST, doctor_id = request.user.id, planning_id = planning_id)
 		if form.is_valid():
 			form.save(doctor_id = request.user.id, planning_id = planning_id)
-			return HttpResponseRedirect('/planning/calendar_view/')
+			return HttpResponseRedirect('/planning/view_calendar/')
 	else:
 		
 		form = PlanningSwapForm(doctor_id = request.user.id, planning_id =  planning_id)
@@ -165,35 +176,3 @@ def swap(request):
 	pass
 
 
-
-from django.shortcuts import render, HttpResponseRedirect
-from django.contrib.auth import logout
-from planning.forms import LoginForm
-
-def hospital_login(request):
-	if request.method == 'POST':
-		form = LoginForm(request.POST)
-		if form.is_valid(request = request):
-			if 'old_password' not in request.POST:
-				return HttpResponseRedirect('/planning/calendar_view/')
-			else:
-				if request.POST['new_password1'] == request.POST['new_password2']:
-					aDoctor = doctors.objects.get(username = request.user)
-					aDoctor.set_password(request.POST['new_password1'])
-					aDoctor.save()
-			return HttpResponseRedirect('/planning/calendar_view/')
-		if 'old_password' not in request.POST:
-			return render(request, 'planning/login.html', {'form': form, 'redirect' : True, 'status': False, 'message' : 'Impossible de se connecter, utilisateur ou mot de passe invalide' })
-		else:
-			return HttpResponseRedirect('/planning/change/')
-	else:
-		form = LoginForm()
-		return render(request, 'planning/login.html', {'form': form, 'redirect' : False})
-
-def hospital_logout(request):
-	logout(request)
-	return HttpResponseRedirect('/')
-
-def hospital_password_change(request):
-	#TODO
-	pass	

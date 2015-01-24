@@ -1,7 +1,11 @@
 {% extends "base/base.html" %}
 {% block content %}
 {% include "base/status.html" %}
-<h4 class="sub-header">Mon planning d'activité</h4>
+
+<h4 class="sub-header">Mon planning d'activité de
+{% for amonth in mymonth %}
+    {{amonth}}
+{% endfor %} </h4>
 <div class="row">
     <div class="col-lg-1">Lun</div>
     <div class="col-lg-1">Mar</div>
@@ -20,24 +24,24 @@
                 <div class="row">
                 <!-- Start the first day of month in the correct place -->
                 {% for anEmpty in aday.range %}
-                    <div class="col-lg-1">x</div>
+                    <div class="col-lg-1"></div>
                 {% endfor %}
             {% endif %}
         {% elif forloop.counter0 == 0  %}
             <div class="row">
             <!-- Start the first day of month in the correct place -->
             {% for anEmpty in aday.range %}
-                <div class="col-lg-1">x</div>
+                <div class="col-lg-1"></div>
             {% endfor %}             
         {% endif %}
             <div class="col-lg-1">
                 {% if  aday.type  == 2 %}
                     <div class="btn-group">
                         {% if aday.passed %}
-                            {{ aday.day|date:'d/m/Y' }}
+                            {{ aday.day|date:'d' }}
                         {% else %}   
                             <a class="btn dropdown-toggle btn-link btn-small" data-toggle="dropdown" href="#">
-                            {{ aday.day|date:'d/m/Y' }}
+                            {{ aday.day|date:'d' }}
                             <span class="caret"></span>
                             </a>
                         {% endif %}                      
@@ -48,7 +52,7 @@
                 {% elif  aday.type  == 1 %}    
                     <div class="btn-group">
                             <a class="btn dropdown-toggle btn-link btn-small" data-toggle="dropdown" href="#">
-                                {{ aday.day|date:'d/m/Y' }}
+                                {{ aday.day|date:'d' }}
                                 <span class="caret"></span>
                              </a>
                             <ul class="dropdown-menu multi-level" role="menu" aria-labelledby="dropdownMenu">
@@ -74,10 +78,10 @@
                 {% else %}
                     <div class="btn-group">
                         {% if aday.passed %}                            
-                            {{ aday.day|date:'d/m/Y' }}                          
+                            {{ aday.day|date:'d' }}                          
                          {% else %} 
                             <a class="btn dropdown-toggle btn-link btn-small" data-toggle="dropdown" href="#">
-                            {{ aday.day|date:'d/m/Y' }}
+                            {{ aday.day|date:'d' }}
                             <span class="caret"></span>
                             </a>
                          {% endif %}                      
