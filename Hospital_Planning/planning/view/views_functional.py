@@ -77,7 +77,7 @@ def view_calendar(request):
 		my_month_page = paginator_month.page(paginator_month.num_pages)
 	return render(request, 'planning/view_calendar.html', 
 				{'calendar_list': my_calandar_page ,
-				'mymonth' : my_month_page}) 
+				'mymonth' : my_month_page, 'todays':datetime.date.today()}) 
 
 
 

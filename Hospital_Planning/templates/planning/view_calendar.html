@@ -6,14 +6,15 @@
 {% for amonth in mymonth %}
     {{amonth}}
 {% endfor %} </h4>
+Date du jour : {{todays |date:'d/m/Y'}}
 <div class="row">
-    <div class="col-lg-1">Lun</div>
-    <div class="col-lg-1">Mar</div>
-    <div class="col-lg-1">Mer</div>
-    <div class="col-lg-1">Jeu</div>
-    <div class="col-lg-1">Ven</div>
-    <div class="col-lg-1">Sam</div>
-    <div class="col-lg-1">Dim</div>
+    <div class="col-lg-1" id="header_"><b>Lun</b></div>
+    <div class="col-lg-1" id="header_"><b>Mar</b></div>
+    <div class="col-lg-1" id="header_"><b>Mer</b></div>
+    <div class="col-lg-1" id="header_"><b>Jeu</b></div>
+    <div class="col-lg-1" id="header_"><b>Ven</b></div>
+    <div class="col-lg-1" id="header_"><b>Sam</b></div>
+    <div class="col-lg-1" id="header_"><b>Dim</b></div>
 </div> 
     {% for calendar_month in calendar_list %}
         {% for aday in calendar_month %}
@@ -24,17 +25,38 @@
                 <div class="row">
                 <!-- Start the first day of month in the correct place -->
                 {% for anEmpty in aday.range %}
-                    <div class="col-lg-1"></div>
+                    <div class="col-lg-1"id="passed"></div>
                 {% endfor %}
             {% endif %}
         {% elif forloop.counter0 == 0  %}
             <div class="row">
             <!-- Start the first day of month in the correct place -->
             {% for anEmpty in aday.range %}
-                <div class="col-lg-1"></div>
+                <div class="col-lg-1" id="passed"></div>
             {% endfor %}             
         {% endif %}
-            <div class="col-lg-1">
+        <!-- 2: reserved days 
+             1: work days
+             0: free days-->
+        {% if  aday.type  == 2 %}
+            {% if aday.passed %}
+                <div class="col-lg-1" id="passed">
+            {% else %}
+                <div class="col-lg-1" id="reserved">
+            {% endif %}
+        {% elif aday.type  == 1 %}
+            {% if aday.passed %}
+                <div class="col-lg-1" id="passed">
+            {% else %}
+                <div class="col-lg-1" id="work">
+            {% endif %}
+        {% else %}
+            {% if aday.passed %}
+                <div class="col-lg-1" id="passed">
+            {% else %}                
+                <div class="col-lg-1" id="availaible">
+            {% endif %}
+        {% endif %}
                 {% if  aday.type  == 2 %}
                     <div class="btn-group">
                         {% if aday.passed %}
@@ -43,19 +65,22 @@
                             <a class="btn dropdown-toggle btn-link btn-small" data-toggle="dropdown" href="#">
                             {{ aday.day|date:'d' }}
                             <span class="caret"></span>
-                            </a>
-                        {% endif %}                      
-                        <ul class="dropdown-menu">
-                            <li><a href="{% url 'planning.view.views_functional.reserved_day_remove' aday.day|date:'Y' aday.day|date:'m' aday.day|date:'d'%}/?page={{ calendar_month.number }}">Rendre échangeable</a></li>
-                        </ul>
+                            </a>                                             
+                            <ul class="dropdown-menu">
+                                <li><a href="{% url 'planning.view.views_functional.reserved_day_remove' aday.day|date:'Y' aday.day|date:'m' aday.day|date:'d'%}/?page={{ calendar_month.number }}">Rendre échangeable</a></li>
+                            </ul>
+                        {% endif %}
                     </div>
                 {% elif  aday.type  == 1 %}    
                     <div class="btn-group">
-                            <a class="btn dropdown-toggle btn-link btn-small" data-toggle="dropdown" href="#">
+                            {% if aday.passed %}
                                 {{ aday.day|date:'d' }}
-                                <span class="caret"></span>
-                             </a>
-                            <ul class="dropdown-menu multi-level" role="menu" aria-labelledby="dropdownMenu">
+                            {% else %} 
+                                <a class="btn dropdown-toggle btn-link btn-small" data-toggle="dropdown" href="#">
+                                    {{ aday.day|date:'d' }}
+                                 <span class="caret"></span>
+                                </a>
+                                <ul class="dropdown-menu multi-level" role="menu" aria-labelledby="dropdownMenu">
                                 <li class="dropdown-submenu">                                   
                                 {% for plan in aday.work %}
                                     <a tabindex="-1" href="#">{{plan.ptimestamp.description}}</a>
@@ -73,7 +98,8 @@
                                     </ul>
                                 {% endfor %}
                                 </li>
-                            </ul>                        
+                                </ul>
+                            {% endif %}                        
                     </div>
                 {% else %}
                     <div class="btn-group">
@@ -84,10 +110,11 @@
                             {{ aday.day|date:'d' }}
                             <span class="caret"></span>
                             </a>
-                         {% endif %}                      
-                        <ul class="dropdown-menu">
-                            <li><a href="{% url 'planning.view.views_functional.reserved_day_add' aday.day|date:'Y' aday.day|date:'m' aday.day|date:'d'%}/?page={{ calendar_month.number }}">Rendre non échangeable</a></li>
-                        </ul>
+                                               
+                            <ul class="dropdown-menu">
+                                <li><a href="{% url 'planning.view.views_functional.reserved_day_add' aday.day|date:'Y' aday.day|date:'m' aday.day|date:'d'%}/?page={{ calendar_month.number }}">Rendre non échangeable</a></li>
+                            </ul>
+                        {% endif %}
                     </div>
                 {% endif %}
             </div>

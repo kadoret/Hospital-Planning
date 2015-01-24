@@ -106,9 +106,31 @@ body {
 [class*="col-lg"], footer {
   background-color: lightgray;
   border: 1px solid black;
-  border-radius: 6px;
+  border-radius: 0px;
   line-height: 40px;
   text-align: center;
+}
+#header_ {
+    border: 0px solid white;
+}
+#row_calendar {
+    border: 1px solid black;
+}
+#work {
+  background-color: #F75D59;
+  border: 0px solid white;
+}
+#availaible {
+  background-color: lightgreen;
+  border: 0px solid white;
+}
+#reserved {
+  background-color: lightblue;
+  border: 0px solid white;
+}
+#passed {
+  background-color: white;
+  border: 0px solid white;
 }
 
 .dropdown-submenu {
